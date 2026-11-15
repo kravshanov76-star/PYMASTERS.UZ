@@ -1,0 +1,2042 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0d1117">
+    <title>PYMASTERS.UZ - Python Akademiyasi</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+        :root {
+            --bg-dark: #0d1117; --bg-panel: #161b22; --bg-sidebar: #010409;
+            --border-color: #30363d; --accent: #2f81f7; --text-main: #c9d1d9; --text-muted: #8b949e;
+        }
+
+        body.light-mode {
+            --bg-dark: #f3f4f6; --bg-panel: #ffffff; --bg-sidebar: #f9fafb;
+            --border-color: #e5e7eb; --text-main: #111827; --text-muted: #6b7280;
+        }
+        body.light-mode .code-editor, body.light-mode .right-panel, body.light-mode .terminal-section { background-color: #ffffff; color: #111827; }
+        body.light-mode .terminal-output { color: #059669; }
+        body.light-mode .editor-header, body.light-mode .terminal-header { background-color: #f9fafb; border-bottom: 1px solid var(--border-color); color: #374151; }
+        body.light-mode .markdown-body h1, body.light-mode .markdown-body h2, body.light-mode .markdown-body h3 { color: #111827; }
+        body.light-mode .markdown-body code { color: #dc2626; background: #fee2e2; }
+        body.light-mode .final-test-panel { background-color: #ffffff; border-color: #d1d5db; color: #111827; }
+        body.light-mode .test-label { background-color: #f3f4f6; border-color: #d1d5db; color: #374151; }
+        body.light-mode .mini-test-card { background-color: #ffffff; border-color: #d1d5db; }
+        
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        .font-code { font-family: 'Fira Code', monospace; }
+        header { height: 60px; background-color: var(--bg-sidebar); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 10; }
+        .layout-container { display: flex; flex: 1; height: calc(100vh - 60px); }
+        
+        .sidebar { width: 340px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; }
+        .sidebar-header { padding: 20px; font-size: 14px; font-weight: bold; color: var(--text-main); background-color: var(--bg-panel); border-bottom: 1px solid var(--border-color); text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+        .lessons-container { flex: 1; overflow-y: auto; padding: 10px 0; }
+        .lesson-item { padding: 12px 20px; font-size: 14px; color: var(--text-muted); cursor: pointer; border-left: 3px solid transparent; transition: 0.2s; display: flex; align-items: center; gap: 12px; }
+        .lesson-item:hover:not(.locked) { background-color: rgba(255,255,255,0.05); color: var(--text-main); }
+        .lesson-item.active { background-color: rgba(47, 129, 247, 0.1); color: var(--accent); border-left-color: var(--accent); font-weight: 500; }
+        .lesson-item.locked { opacity: 0.5; cursor: not-allowed; }
+
+        .center-panel { flex: 1; display: flex; flex-direction: column; border-right: 1px solid var(--border-color); background-color: var(--bg-dark); min-width: 400px; position: relative; }
+        .theory-board { flex: 1; overflow-y: auto; padding: 40px; padding-bottom: 120px; scroll-behavior: smooth; }
+        
+        .fab-btn { position: absolute; bottom: 30px; right: 30px; width: 65px; height: 65px; border-radius: 50%; background-color: var(--accent); color: white; font-size: 28px; display: flex; justify-content: center; align-items: center; box-shadow: 0 10px 25px rgba(47, 129, 247, 0.5); cursor: pointer; z-index: 90; transition: 0.3s; border: none; }
+        .fab-btn:hover { transform: scale(1.08) translateY(-5px); }
+        
+        .right-panel { width: 35%; min-width: 350px; background-color: #1e1e1e; display: flex; flex-direction: column; }
+        .editor-header { background-color: #252526; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; }
+        .code-editor { flex: 1; padding: 20px; background-color: #1e1e1e; color: #d4d4d4; font-size: 15px; line-height: 1.6; border: none; outline: none; resize: none; width: 100%; }
+        .terminal-section { height: 40%; min-height: 200px; background-color: #181818; border-top: 1px solid #333; display: flex; flex-direction: column; }
+        .terminal-header { padding: 8px 20px; background-color: #252526; font-size: 12px; text-transform: uppercase; color: #ccc; letter-spacing: 1px; }
+        .terminal-output { flex: 1; padding: 15px 20px; overflow-y: auto; color: #4ade80; font-size: 14px; white-space: pre-wrap; line-height: 1.5; }
+        
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 { color: #ffffff; font-weight: 600; margin-bottom: 15px; margin-top: 25px; }
+        .markdown-body h1 { font-size: 1.8rem; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; color: var(--accent); }
+        .markdown-body h2 { font-size: 1.4rem; color: #e6edf3; }
+        .markdown-body h3 { font-size: 1.1rem; color: #a5d6ff; margin-top: 30px; }
+        .markdown-body p { margin-bottom: 15px; line-height: 1.7; color: var(--text-main); font-size: 15px; }
+        .markdown-body code { background-color: rgba(110, 118, 129, 0.4); padding: 0.2em 0.4em; border-radius: 6px; font-family: 'Fira Code', monospace; font-size: 90%; color: #ff7b72; }
+        .markdown-body pre { background-color: #161b22; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); overflow: auto; margin-bottom: 20px; }
+        .markdown-body pre code { background-color: transparent; padding: 0; color: #e6edf3; }
+        .markdown-body ul { list-style-type: disc; padding-left: 25px; margin-bottom: 20px; }
+        .markdown-body li { margin-bottom: 8px; line-height: 1.6; font-size: 15px; }
+        
+        .info-card { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; padding: 25px; margin-bottom: 25px; }
+        .info-card h3 { margin-top: 0; font-size: 1.3rem; display: flex; align-items: center; gap: 10px; }
+        
+        .mini-test-card { background-color: #161b22; border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .mini-test-card p { margin-bottom: 10px; font-weight: 500; font-size: 14px; }
+        .mini-test-options button { display: block; width: 100%; text-align: left; padding: 10px 15px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 8px; transition: 0.2s; font-size: 13px; color: var(--text-main); }
+        .mini-test-options button:hover { background: rgba(47, 129, 247, 0.2); border-color: var(--accent); }
+        .mini-test-options button.correct { background: #059669; color: white; border-color: #059669; }
+        .mini-test-options button.wrong { background: #dc2626; color: white; border-color: #dc2626; }
+        
+        .chat-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(13, 17, 23, 0.98); z-index: 100; display: none; flex-direction: column; animation: slideUp 0.3s ease-out; }
+        .chat-modal.active { display: flex; }
+        @keyframes slideUp { from { transform: translateY(20%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .chat-modal-header { padding: 20px 40px; background-color: var(--bg-sidebar); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 40px 15vw; display: flex; flex-direction: column; gap: 20px; }
+        .chat-input-area { padding: 20px 15vw; background-color: var(--bg-panel); border-top: 1px solid var(--border-color); display: flex; gap: 15px; }
+        .chat-input-area input { flex: 1; background-color: var(--bg-dark); border: 1px solid var(--border-color); color: white; padding: 15px 20px; border-radius: 8px; outline: none; font-size: 16px; }
+        .chat-input-area button { background-color: var(--accent); color: white; border: none; padding: 0 30px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        
+        .msg { padding: 15px 20px; border-radius: 12px; max-width: 80%; font-size: 16px; line-height: 1.6; }
+        .msg.bot { background-color: var(--bg-sidebar); border: 1px solid var(--border-color); align-self: flex-start; color: var(--text-main); }
+        .msg.user { background-color: var(--accent); color: white; align-self: flex-end; }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #424a53; border-radius: 4px; }
+        
+        .auth-modal, .profile-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(13, 17, 23, 0.9); z-index: 200; display: none; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .auth-modal.active, .profile-modal.active { display: flex; }
+        .modal-content { background-color: var(--bg-panel); border: 1px solid var(--border-color); padding: 40px; border-radius: 12px; width: 400px; text-align: center; }
+        .modal-content input { width: 100%; padding: 12px; margin: 20px 0; background: var(--bg-dark); border: 1px solid var(--border-color); color: white; border-radius: 8px; outline: none; }
+        .modal-content button { width: 100%; padding: 12px; background-color: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        
+        .progress-container { width: 100%; background-color: var(--bg-dark); border-radius: 8px; height: 12px; margin-top: 15px; overflow: hidden; }
+        .progress-bar { height: 100%; background-color: #4ade80; width: 0%; transition: width 0.5s ease; }
+        
+        .mobile-tabs { display: none; }
+        .sidebar-overlay { display: none; }
+        
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; top: 60px; left: -100%; height: calc(100vh - 60px); width: 280px; z-index: 1000; transition: left 0.3s ease; }
+            .sidebar.open { left: 0; }
+            .sidebar-overlay.active { display: block; position: fixed; top: 60px; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; }
+            .layout-container { flex-direction: column; height: calc(100vh - 60px - 60px); }
+            .center-panel, .right-panel { width: 100% !important; min-width: 100% !important; display: none; }
+            .center-panel.active-tab, .right-panel.active-tab { display: flex; }
+            .mobile-tabs { display: flex; position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background-color: var(--bg-sidebar); border-top: 1px solid var(--border-color); z-index: 100; }
+            .mobile-tab-btn { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--text-muted); background: none; border: none; font-size: 12px; gap: 4px; }
+            .mobile-tab-btn i { font-size: 20px; }
+            .mobile-tab-btn.active { color: var(--accent); }
+            .fab-btn { bottom: 80px; right: 20px; }
+        }
+        @media (min-width: 769px) { .center-panel, .right-panel { display: flex !important; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="flex items-center gap-3">
+            <button onclick="toggleSidebar()" class="md:hidden text-[var(--text-main)] text-2xl mr-2"><i class="fas fa-bars"></i></button>
+            <div class="flex flex-col justify-center">
+                <div class="font-extrabold text-2xl tracking-wider text-[var(--text-main)] leading-none mb-1">PYMASTERS<span class="text-blue-500">.UZ</span></div>
+                <div class="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest leading-none">💻 Dasturlash Asoslari</div>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <button onclick="toggleTheme()" class="text-gray-400 hover:text-white text-xl"><i class="fas fa-moon" id="theme-icon"></i></button>
+            <span class="text-sm font-semibold text-gray-400 hidden sm:inline" id="header-greeting"></span>
+            <div onclick="openProfile()" class="w-10 h-10 rounded-full bg-blue-600 flex justify-center items-center text-white font-bold cursor-pointer text-lg shadow-md" id="header-avatar">?</div>
+        </div>
+    </header>
+
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="layout-container">
+        <aside class="sidebar">
+            <div class="sidebar-header"><i class="fas fa-list text-blue-500 text-lg"></i> MUNDARIJA</div>
+            <div class="lessons-container" id="lessons-list"></div>
+        </aside>
+
+        <main class="center-panel active-tab" id="center-panel">
+            <div class="theory-board" id="theory-board"></div>
+            <button class="fab-btn" onclick="toggleChat()" title="Robo-Ustoz"><i class="fas fa-robot"></i></button>
+        </main>
+
+        <section class="right-panel" id="right-panel">
+            <div class="editor-header">
+                <span class="text-gray-400 font-semibold text-sm flex items-center gap-2"><i class="fas fa-code"></i> Python IDE</span>
+                <button onclick="runPython()" id="run-btn" class="bg-green-600 hover:bg-green-500 text-white text-sm font-semibold py-1.5 px-5 rounded flex items-center gap-2"><i class="fas fa-play"></i> Run Code</button>
+            </div>
+            <textarea class="code-editor font-code" id="code-editor" spellcheck="false"># Python kodingizni yozing:
+print("PYMASTERS.UZ ga xush kelibsiz!")
+</textarea>
+            <div class="terminal-section">
+                <div class="terminal-header flex justify-between items-center">
+                    <span class="flex items-center gap-2"><i class="fas fa-terminal"></i> Terminal</span>
+                    <button onclick="clearTerminal()" class="text-gray-500 hover:text-white"><i class="fas fa-trash"></i></button>
+                </div>
+                <div class="terminal-output font-code" id="terminal-output">Pyodide yuklanmoqda...</div>
+            </div>
+        </section>
+    </div>
+
+    <div class="mobile-tabs" id="mobile-tabs">
+        <button class="mobile-tab-btn active" id="tab-theory" onclick="switchTab('theory')"><i class="fas fa-book-open"></i> Darslik</button>
+        <button class="mobile-tab-btn" id="tab-terminal" onclick="switchTab('terminal')"><i class="fas fa-terminal"></i> Terminal</button>
+    </div>
+
+    <div class="chat-modal" id="chat-modal">
+        <div class="chat-modal-header">
+            <div class="flex items-center gap-4 text-2xl font-bold text-white"><div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center"><i class="fas fa-robot text-white"></i></div>Robo-Ustoz AI</div>
+            <button onclick="toggleChat()" class="bg-[#30363d] hover:bg-red-500 text-white px-6 py-2.5 rounded-lg flex items-center gap-2 font-semibold shadow-lg text-lg"><i class="fas fa-arrow-down"></i> Yopish</button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="msg bot">Assalomu alaykum! Men sizning shaxsiy yordamchingiz **Robo-Ustoz**man. Savolingiz bormi?</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Ustozga savol yozing..." onkeydown="if(event.key === 'Enter') sendMessage()">
+            <button onclick="sendMessage()">Jo'natish <i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <div class="auth-modal" id="login-modal">
+        <div class="modal-content">
+            <i class="fas fa-user-astronaut text-5xl text-blue-500 mb-4"></i>
+            <h2 class="text-2xl font-bold text-white mb-2">Akademiyaga xush kelibsiz!</h2>
+            <input type="text" id="username-input" placeholder="Ismingizni kiriting..." onkeydown="if(event.key === 'Enter') saveUser()">
+            <button onclick="saveUser()">Kirish</button>
+        </div>
+    </div>
+
+    <div class="profile-modal" id="profile-modal">
+        <div class="modal-content relative">
+            <button onclick="closeProfile()" class="absolute top-4 right-4 text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
+            <div class="w-20 h-20 bg-blue-600 rounded-full mx-auto flex items-center justify-center text-3xl font-bold text-white mb-4" id="profile-avatar">?</div>
+            <h2 class="text-xl font-bold text-white mb-1" id="profile-name">Foydalanuvchi</h2>
+            <div class="text-left mt-6">
+                <div class="flex justify-between text-sm mb-1"><span class="text-gray-300">O'zlashtirish:</span><span class="text-green-400 font-bold" id="profile-stats">0/43 (0%)</span></div>
+                <div class="progress-container"><div class="progress-bar" id="profile-progress"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const courseLessons = [
+            "00 BOSH SAHIFA", "01 KERAKLI DASTURLAR", "02 HELLO WORLD!", "03 PRINT(), SINTAKS VA ARIFMETIK AMALLAR", "04 O'ZGARUVCHILAR", "05 STRING (MATN)", "06 SONLAR", "07 LIST (RO'YXAT)", "08 RO'YXATLAR BILAN ISHLASH", "09 FOR TAKRORLASH OPERATORI", "10 IF-ELSE", "11 BIR NECHTA SHARTLARNI TEKSHIRISH", "12 XATOLAR BILAN ISHLASH", "13 GitHub PORTFOLIO", "14 LUG'AT BILAN TANISHUV", "15 LUG'AT ELEMENTLARI BILAN ISHLASH", "16 NESTING", "17 WHILE TSIKLI", "18 WHILE, RO'YXATLAR VA LUG'ATLAR", "19 FUNKSIYA", "20 QIYMAT QAYTARUVCHI FUNKSIYA", "21 FUNKSIYA VA RO'YXAT", "22 MOSLASHUVCHAN FUNKSIYA (*args, **kwargs)", "23 MODULLAR", "24 FUNKSIYALAR. SON'GSO'Z.", "25 \"SON TOPISH\" O'YINI", "26 \"SO'Z TOPISH\" O'YINI", "27 KIRILL-LOTIN TELEGRAM BOT", "28 KLASSLAR", "29 OBYEKTLAR BILAN ISHLASH", "30 VORISLIK VA POLIMORFIZM", "31 INKAPSULYATSIYA", "32 DUNDER METODLAR", "33 FAYLLAR BILAN ISHLASH", "34 JSON", "35 XATOLAR BILAN ISHLASH", "36 FUNKSIYANI TEKSHIRISH", "37 KLASSNI TEKSHIRISH", "38 PYTHON STANDART KUTUBXONASI", "39 PIP VA TASHQI KUTUBXONALAR", "40 SO'NGSO'Z VA KEYINGI QADAMLAR", "41 RegEx", "42 AI BILAN KOD YOZISH (Prompt Engineering)"
+        ];
+
+        const l = {
+            0: `
+# 🚀 💻 DASTURLASH ASOSLARI
+
+Assalom alaykum hurmatli do'stlar. Bu yerda siz dasturlash asoslarini o'rganasiz.
+
+<div class="info-card" style="border-left: 4px solid #2f81f7;">
+    <h3 style="color: #2f81f7;"><i class="fas fa-bullseye"></i> MAQSADIMIZ</h3>
+    <p>Darsimizning asl maqsadi tinglovchilarga dasturlash asoslarini va eng muhimi turli muammolarga yechim bo'luvchi dasturlar yozishni o'rgatish.</p>
+    <p>Buning uchun biz Python tilidan foydalansakda, dars davomida olingan bilimlar barcha dasturlar tili uchun umumiydir.</p>
+    <p>Darslarni boshlashdan avval, keling...</p>
+</div>
+
+<div class="info-card" style="border-left: 4px solid #f59e0b;">
+    <h3 style="color: #f59e0b;"><i class="fas fa-handshake"></i> TANISHAMIZ</h3>
+    <p>Ismim Anvar Narzullaev.</p>
+    <p>Universiti Sains Islam Malaysia oliygohining Axborot Texnologiyalari kafedrasida yetakchi mutaxassis lavozimida ishlayman. Raqamli Texnologiyalar, Kompyuter Arxitekturasi, Axborot Xavfsizligi fanlaridan dars beraman.</p>
+    <p>2004 yilda Toshkent Axborot Texnologiyalar Universitetini Telekommunikatsiya yo'nalishini bitirganman.</p>
+    <p>2006 yilda Janubiy Koreyaning Yeungnam Universitetida Axborot Texnologiyalari Muhandisi yo'nalishida Magistrlik, 2012 yilda esa shu oliygohda Doktorlik (PhD) unvonini himoya qilganman.</p>
+    <p>2013 yildan beri Malayziyaning turli oliy o'quv yurtlarida Computer Science va Axborot Texnologiyalari yo'nalishlarida dars berib kelaman.</p>
+    <p>Birinchi professional dasturimni 13 yoshda yozganman. Turli yillar davomida C, C++, Delphi, Matlab, Java va Python tillaridan foydalanib kelganman.</p>
+    <p>Oxirgi yillarda asosan ikki yo'nalishda ilmiy izlanishlar qilaman: IoT (Internet of things) va AI (Artificial Intelligence).</p>
+    <p>Asosiy dasturlash qurollarim C++, Matlab va Python.</p>
+</div>
+
+<div class="info-card" style="border-left: 4px solid #8b5cf6;">
+    <h3 style="color: #8b5cf6;"><i class="fas fa-network-wired"></i> ONLAYNDAGI MANZILLARIMIZ</h3>
+    <ul>
+        <li><a href="https://t.me/sariqdev" target="_blank" style="color: #2f81f7; text-decoration: underline; font-weight: bold;">SariqDev telegram kanali: https://t.me/sariqdev</a></li>
+        <li><a href="https://www.youtube.com/sariqdev" target="_blank" style="color: #2f81f7; text-decoration: underline; font-weight: bold;">SariqDevYoutube kanali: https://www.youtube.com/sariqdev</a></li>
+    </ul>
+</div>
+
+<div class="info-card" style="border-left: 4px solid #4ade80;">
+    <h3 style="color: #4ade80;"><i class="fas fa-users"></i> DARSLARIMIZ KIM UCHUN?</h3>
+    <p>Darsimizning maqsadi sizni tez va samarali yo'llar bilan Python dasturlash tiliga va eng muhimi dasturchilik olamiga olib kirish. Darsimiz, umrida biror marta Python yoki umuman boshqa tillarda dastur yozmagan barcha yoshdagi insonlarga mo'ljallangan.</p>
+    <p>Dars davomida siz barcha tillar uchun umumiy bo'lgan dasturlash asoslarini puxta o'zlashtirib olasiz, bu esa o'z navbatida sizning kelajakdagi faoliyatingiz uchun muhim poydevor bo'ladi.</p>
+    <p>Umid qilamizki, darslarimiz boshqa o'qituvchilar va dasturchilar uchun ham foydali manba bo'lib xizmat qiladi.</p>
+</div>
+
+<div class="info-card" style="border-left: 4px solid #ec4899;">
+    <h3 style="color: #ec4899;"><i class="fas fa-gift"></i> DARSLARIMIZ SIZGA NIMA BERADI?</h3>
+    <p>Darslarimiz yakunida siz nafaqat Python tilini, balki barcha dasturlash tillari uchun umumiy bo'lgan tushunchalar va asoslarni ham puxta o'zlashtirib olasiz.</p>
+    <p>Kursni muvaffaqiyatli tamomlagan tinglovchilar, kelajakda dasturlashning tor va murakkab yo'nalishlarini ham, mutlaqo yangi dasturlash tilini ham yengillik bilan o'zlashtira oladilar.</p>
+    <p>Darslarimizning birinchi qismida siz Python dasturlarini yozish uchun muhim bo'lgan asosiy tushunchalarni o'rganasiz. Ushbu tushunchalar xar qanday dasturlash tillari uchun bir xildir. Jumladan ushbu qism quyidagi mavzularni o'z ichiga oladi:</p>
+    <ul>
+        <li>Ma'lumotlar turlari va ularni saqlash usullari</li>
+        <li>Ma'lumotlar to'plamini yaratish, ular ustida samarali ishlash usullari</li>
+        <li>While, if tsikllari yordamida shartlarni tekshirish va kodni tarmoqlash</li>
+        <li>Interaktiv dasturlar yaratish orqali foydalanuvchilar bilan ikki tomonlama "muloqot" o'rnatish, ulardan ma'lumot qabul qilish</li>
+        <li>Kodning ma'lum qismlarini qayta-qayta ishlatish uchun funktsiyalar yozish</li>
+        <li>Yozgan dasturingizni tekshirish uchun testlar yozish, va kelajakdagi xatolarning oldini olish</li>
+    </ul>
+    <p>Kursimizning ikkinchi qismida esa o'zlashtirgan bilimlaringizni puxtalash uchun bir nechta loyihalar ustida ishlaysiz.</p>
+</div>
+
+<div class="info-card" style="border-left: 4px solid #14b8a6;">
+    <h3 style="color: #14b8a6;"><i class="fab fa-python"></i> NIMA UCHUN AYNAN PYTHON?</h3>
+    <p>Python — o'rganish uchun oson, foydalanish uchun qulay, ko'p qirrali dasturlash tili bo'lib, dasturlashga yangi kirganlar uchun ham, soha mutaxassislari uchun ham zo'r tanlov.</p>
+    <p>Python o'rganish uchun 5 sabab:</p>
+    <ol style="list-style-type: decimal; padding-left: 25px; margin-bottom: 20px;">
+        <li style="margin-bottom: 8px;">Python dasturlash tiliga bo'lgan talab yildan yilga oshib kelmoqda. CodingDojo portalining tadqiqotlariga ko'ra, 2020 yilda aynan Python tilida dasturlovchi mutaxassislarga eng ko'p talab bo'lgan. Manba: https://www.codingdojo.com/blog/top-7-programming-languages</li>
+        <li style="margin-bottom: 8px;">Python Artificial Intelligence (Sun'iy intellekt) va Data Science (Ulkan ma'lumotlar bilan ishlash) sohalarining tili hisoblanadi. Bugungi kunda keng ommalashib borayotgan sun'iy intellekt asosida ishlovchi dasturlarning aksari Pythonda yozilgan. Bu sohalardagi mutaxassislar bugungi kunda eng noyob va qimmatbaho kadrlar hisoblanadi.</li>
+        <li style="margin-bottom: 8px;">Keng qamrovli va universal til. Python dasturlari deyarli barcha operativ tizimlarda va platformalarda ishlaydi.</li>
+        <li style="margin-bottom: 8px;">O'rganish uchun ham, tushunish uchun ham juda qulay va sodda kod. Quyidagi ikki tilda yozilgan kodlargaga e'tibor bering, va ulardan qay biri tushunarliroq ekanini ko'ring (ikkisi ham bir vazifani bajaradi):<br><br><code>// JAVA<br>public class Main {<br>&nbsp;&nbsp;&nbsp;&nbsp;public static void main(String[] args) {<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;System.out.println("Assalom Alaykum!");<br>&nbsp;&nbsp;&nbsp;&nbsp;}<br>}</code><br><br><code># PYTHON<br>print("Assalom Alaykum!")</code><br><br></li>
+        <li style="margin-bottom: 8px;">Moslashuvchanlik —Python dasturlash tili ma'lum bir masalalarni yechish bilan chegaralanmagan. Bu til dasturchilarga yangi va yangi yo'nalishlarga ki'rish imkonini beradi. Python quyidagi sohalarda qo'llaniladi: Web va Internet dasturlash, kompyuter o'yinlarini yaratish, ma'lumotlar bazasi bilan ishlash (DB), computer vision, foydalanuvchilar uchun grafik interfeys (GUI), juda tez rivojlanayotgan buyumlar interneti (IoT) texnologiyasi va hokazo. Manba: https://data-flair.training/blogs/python-applications/</li>
+    </ol>
+</div>
+
+<div class="info-card" style="border-left: 4px solid #f43f5e;">
+    <h3 style="color: #f43f5e;"><i class="fas fa-book"></i> MANBALAR</h3>
+    <p>Ushbu kursni tayyorlashda quyidagi kitoblar va resurslardan foydalanildi:</p>
+    <ul>
+        <li><a href="https://python.sariq.dev" target="_blank" style="color: #2f81f7; text-decoration: underline; font-weight: bold;">https://python.sariq.dev</a></li>
+        <li><a href="https://www.learnpython.org" target="_blank" style="color: #2f81f7; text-decoration: underline; font-weight: bold;">www.learnpython.org</a></li>
+    </ul>
+</div>
+`,
+            1: `
+# #01 KERAKLI DASTURLAR
+
+### 1. Pythonni O'rnatish
+Python tilida dastur yozish uchun kompyuterga Python Interpretatorini o'rnatish kerak. Windows foydalanuvchilari python.org dan yuklab olishda albatta **"Add Python to PATH"** tugmasini belgilashlari shart.
+Linux (Ubuntu) serverlarida (backend uchun) quyidagi buyruq ishlatiladi:
+<pre><code>sudo apt update
+sudo apt install python3 python3-pip -y</code></pre>
+
+### 2. Virtual Muhit (Virtual Environment)
+Loyihalar bir-biriga xalaqit bermasligi uchun har bir loyihaga alohida virtual muhit yaratish backendda oltin qoidadir.
+<pre><code>python3 -m venv venv
+source venv/bin/activate  # Linux/Mac uchun
+venv\\Scripts\\activate     # Windows uchun</code></pre>
+
+### 3. VS Code Muharriri
+Kodni qulay yozish uchun Visual Studio Code tavsiya etiladi. Terminalda papkani VS Code da ochish uchun:
+<pre><code>code .</code></pre>
+
+### 4. Brauzerda Ishlash (PYMASTERS IDE)
+Agar sizda dastur o'rnatishga imkon bo'lmasa, ushbu platformamizning o'ng tomonidagi **Terminal (Pyodide)** aynan siz uchun yaratilgan. Kodni yozing va "Run Code" ni bosing.
+`,
+            2: `
+# #02 HELLO WORLD!
+
+### 1. Ekranga ma'lumot chiqarish (print)
+Kompyuter ekraniga har qanday yozuv yoki ma'lumotni chiqarish uchun \`print()\` funksiyasi ishlatiladi. Uning vazifasi juda oddiy — qavs ichiga nima yozsangiz, kompyuter shuni ko'rsatib beradi.
+<pre><code>print("Hello World!")</code></pre>
+
+### 2. Matn (String) Qoidalari
+Matnlar doim qo'shtirnoq \`""\` yoki bittalik tirnoq \`''\` ichida yozilishi shart. Aks holda Python buni o'zgaruvchi deb o'ylaydi va xato beradi.
+<pre><code>print('Salom, Kamron!')
+print("O'zbekiston") # Matn ichida tutuq belgisi bo'lsa qo'shtirnoq ishlatiladi</code></pre>
+
+### 3. Xatoliklar (SyntaxError)
+Agar qavsni yopishni yoki qo'shtirnoqni unutsangiz, Python sintaksis xatosi beradi:
+<pre><code># Noto'g'ri:
+# print("Salom) 
+# print(Salom)</code></pre>
+
+### 4. Interactive Mode
+Terminalda shunchaki \`python\` deb yozsangiz, REPL muhiti ochiladi va siz kodni qator-ba-qator tekshirib ko'rishingiz mumkin. Uni yopish uchun \`exit()\` yoziladi.
+<pre><code>python
+>>> print("Bu interaktiv muhit")
+exit()</code></pre>
+`,
+            3: `
+# #03 PRINT(), SINTAKS VA ARIFMETIK AMALLAR
+
+### 1. Matn va Sonlarni Birlashtirish
+\`print()\` yordamida nafaqat bitta matn, balki vergul orqali bir nechta qiymatlarni ham chiqarish mumkin.
+<pre><code>print("Mening yoshim", 20, "da")</code></pre>
+
+### 2. Asosiy Arifmetik Amallar
+Pythonda matematika juda oson ishlaydi:
+* Qo'shish: \`+\`
+* Ayirish: \`-\`
+* Ko'paytirish: \`*\`
+* Bo'lish: \`/\` (Natija doim float - o'nlik son bo'ladi)
+<pre><code>print(10 + 5)   # 15
+print(20 / 4)   # 5.0</code></pre>
+
+### 3. Maxsus Matematik Operatorlar
+* Qoldiqsiz bo'lish: \`//\`
+* Qoldiqni olish: \`%\`
+* Darajaga ko'tarish: \`**\`
+<pre><code>print(10 // 3)  # 3 (Qoldiq 1 tashlab yuboriladi)
+print(10 % 3)   # 1 (Qoldiqning o'zi olinadi)
+print(5 ** 2)   # 25 (5 ning kvadrati)</code></pre>
+
+### 4. Eslatma (Comments)
+Dasturga o'zingiz uchun izoh yozmoqchi bo'lsangiz panjara \`#\` belgisidan foydalanasiz. Kompyuter bu qatorni o'qimaydi.
+<pre><code># Bu qatorni kompyuter umuman ko'rmaydi
+print("Lekin buni ko'radi")</code></pre>
+`,
+            4: `
+# #04 O'ZGARUVCHILAR (VARIABLES)
+
+### 1. O'zgaruvchi Nima?
+O'zgaruvchi kompyuter xotirasidan joy oluvchi va o'zida ma'lumot saqlovchi qutichadir. Qutiga nom beramiz va unga \`=\` orqali qiymat yuklaymiz.
+<pre><code>ism = "Kamron"
+yosh = 20
+print(ism)</code></pre>
+
+### 2. Nomlash Qoidalari
+* O'zgaruvchi nomi harf yoki pastki chiziq \`_\` bilan boshlanishi shart.
+* Son bilan boshlash mumkin emas (\`1ism = "Ali"\` xato).
+* Orasida bo'sh joy (probel) bo'lmasligi kerak.
+<pre><code># To'g'ri nomlash:
+ism_sharif = "Kamron Dasturchiyev"  # snake_case (tavsiya etiladi)
+ismSharif = "Ali Valiyev"          # camelCase</code></pre>
+
+### 3. Dinamik Tiplash (Dynamic Typing)
+C++ yoki Java tillaridan farqli o'laroq, Pythonda o'zgaruvchining turini (int, string) oldindan aytish shart emas. Python o'zi buni aniqlaydi.
+<pre><code>x = 10      # integer
+x = "Matn"  # endi string bo'ldi
+print(x)</code></pre>
+
+### 4. O'zgarmaslar (Constants)
+Pythonda o'zgarmas (o'zgartirilmasligi kerak bo'lgan) o'zgaruvchilarni katta harflar bilan yozish kelishilgan (konvensiya).
+<pre><code>PI = 3.14159
+DATABASE_URL = "postgres://localhost:5432/mydb"</code></pre>
+`,
+            5: `
+# #05 STRING (MATN)
+
+### 1. F-String (Zamonaviy formatlash)
+O'zgaruvchilarni matn ichiga chiroyli qo'shish uchun matn boshiga \`f\` harfi qo'yiladi va o'zgaruvchilar \`{}\` ichiga olinadi. Bu backendda ma'lumotlarni qoliplashda eng ko'p ishlatiladigan usul.
+<pre><code>ism = "Kamron"
+kasb = "Backend dasturchi"
+print(f"Salom, mening ismim {ism}. Kasbim {kasb}.")</code></pre>
+
+### 2. Matn Metodlari (Upper, Lower, Title)
+Matn ustida amallar bajarish uchun maxsus tayyor metodlar mavjud.
+<pre><code>shahar = "toShkENt"
+print(shahar.lower())  # toshkent
+print(shahar.upper())  # TOSHKENT
+print(shahar.title())  # Toshkent</code></pre>
+
+### 3. Bo'shliqlarni tozalash (Strip)
+Foydalanuvchilar ba'zida ma'lumot kiritayotganda ortiqcha bo'sh joy qoldirishadi. \`strip()\` orqali biz ikki chetdagi probellarni kesib tashlaymiz.
+<pre><code>parol = "  admin123  "
+toza_parol = parol.strip()
+print(f"Sizning parolingiz: {toza_parol}")</code></pre>
+
+### 4. Qidirish va Almashtirish (Replace)
+Matn ichidagi ma'lum bir qismni topib, o'rniga boshqasini qo'yish:
+<pre><code>matn = "Men Java dasturchisiman"
+yangi_matn = matn.replace("Java", "Python")
+print(yangi_matn)</code></pre>
+`,
+            6: `
+# #06 SONLAR (Integers & Floats)
+
+### 1. Butun va O'nlik sonlar
+* **Integer (int):** 10, -5, 1000000
+* **Float (float):** 3.14, 2.0, -1.5
+Sonlar ustida barcha arifmetik amallar bajariladi.
+
+<pre><code>a = 20    # int
+b = 5.5   # float
+print(type(a)) # &lt;class 'int'&gt;</code></pre>
+
+### 2. Katta sonlarni ajratish
+Minglik xonalarni ajratish uchun pastki chiziqdan \`_\` foydalansangiz bo'ladi, kompyuter uni baribir oddiy sondek o'qiydi.
+<pre><code>aholi = 36_000_000
+maosh = 1_500_000
+print(aholi + maosh)</code></pre>
+
+### 3. Ma'lumot turini o'zgartirish (Typecasting)
+\`input()\` orqali foydalanuvchidan olingan har qanday narsa MATN (string) bo'ladi. Uni songa o'tkazish uchun \`int()\` yoki \`float()\` ishlatamiz.
+<pre><code>yil = input("Tug'ilgan yilingizni kiriting: ")
+# yil hozir "2000" shaklidagi matn. Uni songa o'zgartiramiz:
+yosh = 2026 - int(yil)
+print(f"Siz {yosh} yoshdasiz.")</code></pre>
+
+### 4. Yaxlitlash (Round)
+Kasr qismini uzaytirmasdan, kerakli xonagacha yaxlitlash uchun \`round()\` qulay.
+<pre><code>pi = 3.14159265
+print(round(pi, 2))  # Natija: 3.14</code></pre>
+`,
+            7: `
+# #07 LIST (RO'YXAT)
+
+### 1. Ro'yxat yaratish
+Bitta o'zgaruvchi ichida bir nechta ma'lumotlarni ketma-ket saqlash uchun ro'yxat \`[]\` yaratamiz.
+<pre><code>mevalar = ['olma', 'anjir', 'shaftoli']
+sonlar = [10, 20, 30, 40]
+aralash = ['Kamron', 20, True, 5.5]</code></pre>
+
+### 2. Indekslash (0 dan boshlanadi!)
+Dasturlashda sanoq 1 dan emas, 0 dan boshlanadi. Elementni chaqirish uchun uning indeksini yozamiz.
+<pre><code>mevalar = ['olma', 'anjir', 'shaftoli']
+print(mevalar[0])  # olma
+print(mevalar[1])  # anjir</code></pre>
+
+### 3. Oxirgi elementga murojaat
+Ro'yxatning eng oxiridagi ma'lumotni olish uchun doim \`-1\` indeksi ishlatiladi.
+<pre><code>mashinalar = ['Nexia', 'Cobalt', 'Malibu', 'Tracker']
+print(mashinalar[-1]) # Tracker
+print(mashinalar[-2]) # Malibu</code></pre>
+
+### 4. Elementni o'zgartirish
+Ro'yxatdagi istalgan ma'lumotni indeks orqali to'g'ridan-to'g'ri almashtirish mumkin.
+<pre><code>ismlar = ['Ali', 'Vali']
+ismlar[0] = 'Hasan'
+print(ismlar) # ['Hasan', 'Vali']</code></pre>
+`,
+            8: `
+# #08 RO'YXATLAR BILAN ISHLASH
+
+### 1. Element Qo'shish (Append va Insert)
+Ro'yxat oxiriga ma'lumot qo'shish uchun \`.append()\`, aynan ma'lum bir o'ringa suqib kirgizish uchun \`.insert()\` ishlatiladi.
+<pre><code>kadrlar = ['Ali', 'Vali']
+kadrlar.append('Hasan')         # Oxiriga qo'shadi
+kadrlar.insert(0, 'Kamronbek')  # Eng boshiga qo'shadi
+print(kadrlar)</code></pre>
+
+### 2. Element O'chirish (Remove va Pop)
+Elementni nomi bo'yicha o'chirish uchun \`.remove()\`, indeksi bo'yicha sug'urib olish uchun \`.pop()\` ishlatiladi.
+<pre><code>mevalar = ['olma', 'banan', 'nok', 'uzum']
+mevalar.remove('banan')
+oxirgi_meva = mevalar.pop() # 'uzum' ni kesib oladi
+print(oxirgi_meva)</code></pre>
+
+### 3. Tartiblash (Sort va Sorted)
+\`sort()\` asl ro'yxatni butunlay tartiblaydi. \`sorted()\` esa asliga tegmasdan faqat tartiblangan nusxasini ko'rsatadi.
+<pre><code>sonlar = [4, 1, 9, -2, 5]
+sonlar.sort()               # O'sish tartibida
+sonlar.sort(reverse=True)   # Kamayish tartibida
+print(sonlar)</code></pre>
+
+### 4. O'zgarmas Ro'yxat (Tuple)
+Agar ro'yxatingiz xavfsiz bo'lishi va dastur davomida o'zgartirilmasligi kerak bo'lsa, \`[]\` emas \`()\` ishlatiladi.
+<pre><code>kunlar = ('Dushanba', 'Seshanba', 'Chorshanba')
+# kunlar[0] = "Juma" # XATO! Tuple ni o'zgartirib bo'lmaydi.</code></pre>
+`,
+            9: `
+# #09 FOR TAKRORLASH OPERATORI
+
+### 1. For Tsikli nima?
+Tsikl - dasturga bir xil ishni yuzlab marta zerikmasdan qildirish quroli. \`for\` orqali biz ro'yxatning har bir elementiga birma-bir kirib chiqamiz.
+<pre><code>mehmonlar = ['Ali', 'Vali', 'Hasan', 'Husan']
+for mehmon in mehmonlar:
+    print(f"Xush kelibsiz, {mehmon}!")</code></pre>
+
+### 2. range() Funksiyasi
+Agar bizga ma'lum bir oraliqdagi sonlar kerak bo'lsa, \`range()\` funksiyasi ishlatiladi.
+<pre><code>for son in range(1, 6): # 1 dan 5 gacha aylanadi (6 kirmaydi)
+    print(f"{son}-qator: Salom!")</code></pre>
+
+### 3. Ro'yxatni to'ldirish
+For va range yordamida bo'sh ro'yxatga avtomatik ma'lumot kiritish mumkin:
+<pre><code>kvadratlar = []
+for son in range(1, 11):
+    kvadratlar.append(son ** 2)
+print(kvadratlar)</code></pre>
+
+### 4. List Comprehension (Advanced)
+Yuqoridagi kodni 1 qatorda, professional qilib yozish usuli (Backendda juda mashhur):
+<pre><code>kvadratlar = [son ** 2 for son in range(1, 11)]
+print(kvadratlar)</code></pre>
+`,
+            10: `
+# #10 IF-ELSE (SHARTLAR)
+
+### 1. Dasturga Miya (Logika) Kiritish
+Dastur qaror qabul qilishi uchun unga shart beramiz. \`if\` - agar shart to'g'ri bo'lsa, \`else\` - aks holda.
+<pre><code>yosh = 20
+if yosh >= 18:
+    print("Xush kelibsiz!")
+else:
+    print("Kirish taqiqlangan.")</code></pre>
+
+### 2. Taqqoslash Operatorlari
+Pythonda quyidagi shartlarni tekshirish mumkin:
+* \`==\` (Tengmi?)
+* \`!=\` (Teng emasmi?)
+* \`>\`, \`<\` (Katta, kichik)
+* \`>=\`, \`<=\` (Katta yoki teng)
+<pre><code>ism = "kamron"
+if ism.lower() == "kamron":
+    print("Siz adminsiz.")</code></pre>
+
+### 3. Ro'yxat bilan ishlash
+Element ro'yxatda bor yoki yo'qligini \`in\` orqali tekshiramiz.
+<pre><code>menu = ['osh', 'shashlik', 'somsa']
+ovqat = 'osh'
+
+if ovqat in menu:
+    print("Buyurtma qabul qilindi.")
+else:
+    print("Kechirasiz, bu taom yo'q.")</code></pre>
+
+### 4. Qisqa IF (Ternary Operator)
+Agar shart juda qisqa bo'lsa, uni bitta qatorda yozish mumkin:
+<pre><code>baho = 5
+natija = "A'lo" if baho == 5 else "Yomon"
+print(natija)</code></pre>
+`,
+            11: `
+# #11 BIR NECHTA SHARTLARNI TEKSHIRISH (If-Elif-Else)
+
+### 1. Zanjirli Shartlar
+Variantlar ikkitadan ko'p bo'lsa, \`elif\` (else if) qo'shib ketaveramiz.
+<pre><code>yosh = int(input("Yoshingiz nechida? "))
+
+if yosh <= 7:
+    narx = 0
+elif yosh < 18:
+    narx = 10000
+else:
+    narx = 20000
+
+print(f"Chipta narxi: {narx} so'm.")</code></pre>
+
+### 2. AND (VA) Operatori
+Ikkita shartning ikkalasi ham ROST (True) bo'lishi talab qilinsa \`and\` ishlatamiz.
+<pre><code>login = "admin"
+parol = "12345"
+
+if login == "admin" and parol == "12345":
+    print("Tizimga kirdingiz!")
+else:
+    print("Xato!")</code></pre>
+
+### 3. OR (YOKI) Operatori
+Shartlardan bittasi to'g'ri bo'lsa ham qabul qilinadigan vaziyat:
+<pre><code>kun = "yakshanba"
+if kun == "shanba" or kun == "yakshanba":
+    print("Bugun dam olish kuni!")</code></pre>
+
+### 4. Ketma-ket mustaqil shartlar
+Agar siz bir-biriga bog'liq bo'lmagan, hamma shartlarni tekshirib chiqmoqchi bo'lsangiz \`elif\` emas, faqat \`if\` lar qatorini yozasiz.
+<pre><code># Mijozga qo'shimchalarni hisoblash
+narx = 15000
+if "choy" in buyurtma:
+    narx += 2000
+if "non" in buyurtma:
+    narx += 3000</code></pre>
+`,
+            12: `
+# #12 XATOLAR BILAN ISHLASH
+
+### 1. SyntaxError (Sintaksis xato)
+Dasturlash tilining yozilish qoidalari buzilganda kelib chiqadi. Ko'pincha qavs, qo'shtirnoq yopilmasa yoki oxiriga \`:\` qo'yilmasa paydo bo'ladi.
+<pre><code># Noto'g'ri:
+# if yosh > 18
+#     print("Kattasiz")
+
+# To'g'ri:
+if yosh > 18:
+    print("Kattasiz")</code></pre>
+
+### 2. IndentationError (Bo'sh joy xatosi)
+Pythonda figurali qavslar yo'q, uning o'rniga kod qator boshidan surib (Tab / 4 ta probel) yoziladi. Xatboshida adashish kodni buzadi.
+<pre><code># Noto'g'ri:
+# for son in range(5):
+# print(son)
+
+# To'g'ri:
+for son in range(5):
+    print(son)</code></pre>
+
+### 3. NameError (Ism xatosi)
+Mavjud bo'lmagan, e'lon qilinmagan o'zgaruvchini chaqirganda yuz beradi.
+<pre><code>ism = "Kamron"
+# print(ismm)  # NameError: name 'ismm' is not defined</code></pre>
+
+### 4. TypeError (Tur xatosi)
+Turli xil ma'lumotlarni bir-biriga qo'shmoqchi bo'lsangiz paydo bo'ladi (Masalan matnga sonni to'g'ridan-to'g'ri qo'shish).
+<pre><code>yosh = 20
+# print("Men " + yosh + " yoshdaman") # TypeError!
+# To'g'ri usul (f-string):
+print(f"Men {yosh} yoshdaman")</code></pre>
+`,
+            13: `
+# #13 GitHub PORTFOLIO
+
+### 1. Git va GitHub Nima?
+Git — yozgan kodingiz tarixini (versiyalarini) saqlab boruvchi texnologiya. GitHub esa bu kodlarni internetda (bulutda) saqlash va boshqa dasturchilarga ko'rsatish (portfolio) uchun platforma.
+
+### 2. Asosiy Buyruqlar (Terminal)
+Loyiha papkasini Git omboriga aylantirish va fayllarni yuklash:
+<pre><code>git init
+git add .
+git commit -m "Birinchi loyiha yuklandi"</code></pre>
+
+### 3. GitHub Ga Ulanish va Jo'natish
+GitHub da yangi repository yaratgach, mahalliy kodni internetga uzatish:
+<pre><code>git branch -M main
+git remote add origin https://github.com/SizningLoginingiz/loyiha_nomi.git
+git push -u origin main</code></pre>
+
+### 4. Branching (Tarmoqlanish)
+Katta loyihalarda asosiy kodni buzib qo'ymaslik uchun alohida tarmoq (\`branch\`) da ishlanadi:
+<pre><code>git checkout -b yangi_funksiya
+# ishlarni tugatgach...
+git checkout main
+git merge yangi_funksiya</code></pre>
+`,
+            14: `
+# #14 LUG'AT BILAN TANISHUV (Dictionaries)
+
+### 1. Lug'at o'zi nima?
+Ro'yxatda (\`list\`) ma'lumotlar 0, 1, 2 indekslar orqali chaqirilsa, Lug'atda (\`dict\`) har bir qiymatning o'zining "Ismi" (kaliti / key) bo'ladi.
+<pre><code>talaba = {
+    'ism': 'Kamron',
+    'yosh': 20,
+    'soha': 'Backend'
+}</code></pre>
+
+### 2. Ma'lumot olish
+Lug'atdagi qiymatni olish uchun kvadrat qavs ichiga kalit nomi yoziladi.
+<pre><code>print(talaba['ism'])  # Kamron</code></pre>
+
+### 3. LBYL vs EAFP tushunchalari
+Agar lug'atda yo'q kalitni chaqirsak xato beradi (KeyError). Buni yechishning 2 xil falsafasi bor:
+**LBYL** (Sakrashdan oldin qara) - avval tekshiramiz:
+<pre><code>if 'baho' in talaba:
+    print(talaba['baho'])
+else:
+    print("Bunday ma'lumot yo'q")</code></pre>
+
+**EAFP** (Ruxsat so'ragandan ko'ra kechirim so'ragan osonroq) - Pythonistlar yoqtirgan usul (Try-Except):
+<pre><code>try:
+    print(talaba['baho'])
+except KeyError:
+    print("Bunday ma'lumot yo'q")</code></pre>
+
+### 4. Yangi kalit qo'shish va o'zgartirish
+<pre><code>talaba['baho'] = 5           # Yangi ma'lumot qo'shish
+talaba['yosh'] = 21          # Bor ma'lumotni yangilash
+del talaba['soha']           # O'chirish</code></pre>
+`,
+            15: `
+# #15 LUG'AT ELEMENTLARI BILAN ISHLASH
+
+### 1. Eng xavfsiz usul: .get() metodi
+Yo'q kalitni chaqirganda \`KeyError\` chiqmasligi uchun lug'atlarda ajoyib \`.get()\` metodi bor. Unda kalit topilmasa, o'rniga zaxira matn qaytariladi.
+<pre><code>mashina = {'model': 'Malibu', 'rang': 'Qora'}
+# 'narx' kaliti yo'q, shuning uchun zaxira yozuv chiqadi:
+print(mashina.get('narx', 'Narx belgilanmagan')) </code></pre>
+
+### 2. .items() — Barchasini olish
+Lug'atni \`for\` tsikli orqali aylantirganda birdaniga kalitni ham, qiymatni ham olish kerak bo'ladi.
+<pre><code>izohlar = {'Ali': 'Ajoyib dars!', 'Vali': 'Tushunarli'}
+for ism, izoh in izohlar.items():
+    print(f"Foydalanuvchi {ism} yozdi: {izoh}")</code></pre>
+
+### 3. .keys() va .values()
+Faqatgina kalitlar ro'yxati yoki faqat qiymatlar ro'yxati kerak bo'lganda:
+<pre><code>mahsulotlar = {'Olma': 10000, 'Banan': 20000, 'Anor': 15000}
+
+print(mahsulotlar.keys())   # dict_keys(['Olma', 'Banan', 'Anor'])
+print(mahsulotlar.values()) # dict_values([10000, 20000, 15000])</code></pre>
+
+### 4. set() orqali takroriylikni yo'qotish
+Agar qiymatlar ichida bir xillari ko'p bo'lsa va sizga faqat noyoblari kerak bo'lsa \`set()\` (to'plam) ishlatiladi.
+<pre><code>kadrlar = {'Ali': 'python', 'Vali': 'java', 'Hasan': 'python'}
+noyob_tillar = set(kadrlar.values())
+print(noyob_tillar) # {'java', 'python'} (bittasi qoldi)</code></pre>
+`,
+            16: `
+# #16 NESTING (ICHMA-ICHLIK)
+
+### 1. Nesting haqida
+Dunyodagi deyarli barcha API lar va Ma'lumotlar bazalari (JSON format) Nesting orqali quriladi. Bu — lug'at ichiga ro'yxat, yoki ro'yxat ichiga lug'atni joylash (matryoshka) san'ati.
+
+### 2. Ro'yxat ichida Lug'atlar (List of Dicts)
+Mijozlar bazasini quramiz:
+<pre><code>mijozlar = [
+    {'ism': 'Kamron', 'balans': 5000},
+    {'ism': 'Ali', 'balans': 10000}
+]
+
+# Alining balansini olish:
+print(mijozlar[1]['balans']) # Natija: 10000</code></pre>
+
+### 3. Lug'at ichida Ro'yxatlar
+Bir foydalanuvchiga tegishli bo'lgan bir nechta xususiyatlar:
+<pre><code>dasturchi = {
+    'ism': 'Kamron',
+    'tillar': ['Python', 'SQL', 'Go']
+}
+
+for til in dasturchi['tillar']:
+    print(f"Kamron biladigan til: {til}")</code></pre>
+
+### 4. Lug'at ichida Lug'at (Complex Data)
+Telegram xabari qanday kelishini simulyatsiya qilamiz:
+<pre><code>telegram_msg = {
+    'message_id': 123,
+    'from': {
+        'id': 777777,
+        'is_bot': False,
+        'first_name': 'Kamron'
+    },
+    'text': '/start'
+}
+
+# Yuboruvchining ismini tortib olamiz:
+yuboruvchi = telegram_msg['from']['first_name']
+print(yuboruvchi)</code></pre>
+`,
+            17: `
+# #17 WHILE TSIKLI
+
+### 1. While nima?
+\`for\` tsikli ro'yxatdagi narsalar tugaguncha aylanadi. \`while\` (toki) esa berilgan shart to'g'ri (True) ekan, cheksiz aylanadi.
+<pre><code>son = 1
+while son <= 5:
+    print(son)
+    son += 1 # Sonni oshiramizki, shart qachondir to'xtasin</code></pre>
+
+### 2. Dasturni to'xtovsiz ushlash (Input bilan)
+<pre><code>savol = "Yoshingizni kiriting (chiqish uchun 'exit'): "
+ishora = True
+
+while ishora:
+    qiymat = input(savol)
+    if qiymat == 'exit':
+        ishora = False
+    else:
+        print(f"Siz {qiymat} yoshdasiz")</code></pre>
+
+### 3. break (Sindirib chiqish)
+Yuqoridagi \`ishora\` o'rniga to'g'ridan-to'g'ri cheksiz tsikl yozib, kerak bo'lganda \`break\` orqali sindirib chiqish eng professional usuldir.
+<pre><code>while True:
+    ism = input("Ismingizni yozing ('exit' to'xtatadi): ")
+    if ism == 'exit':
+        break # Kod shu joydan uzilib, tashqariga chiqadi
+    print(f"Salom {ism}!")</code></pre>
+
+### 4. continue (Davom ettirish)
+\`continue\` tsiklni to'xtatmaydi, balki o'zidan keyingi kodlarni tashlab o'tib, tsiklni yana boshidan aylanishga majbur qiladi.
+<pre><code>son = 0
+while son < 10:
+    son += 1
+    if son % 2 != 0: # Toq son bo'lsa
+        continue     # O'tkazib yubor
+    print(son)       # Faqat juft sonlar chiqadi</code></pre>
+`,
+            18: `
+# #18 WHILE, RO'YXAT VA LUG'ATLAR
+
+### 1. Baza yaratish simulyatsiyasi
+Foydalanuvchilar to'xtovsiz ro'yxatdan o'tadigan, va oxirida ro'yxatni ko'rsatadigan dastur:
+<pre><code>ismlar = []
+while True:
+    ism = input("Ism kiriting (to'xtatish - 'stop'): ")
+    if ism == 'stop':
+        break
+    ismlar.append(ism)
+
+print("Ro'yxat:", ismlar)</code></pre>
+
+### 2. Lug'atni dinamik to'ldirish (Key-Value)
+Mahsulot va narxini kiritish platformasi:
+<pre><code>buyurtmalar = {}
+while True:
+    mahsulot = input("Mahsulot nomi (chiqish - 0): ")
+    if mahsulot == '0':
+        break
+    narx = int(input(f"{mahsulot.title()} narxi: "))
+    buyurtmalar[mahsulot] = narx
+
+for m, n in buyurtmalar.items():
+    print(f"{m.title()} - {n} so'm")</code></pre>
+
+### 3. Ro'yxatdan o'chirish (While bilan)
+Ro'yxat ichida bitta so'z bir necha marta takrorlangan bo'lsa, \`.remove()\` faqat bittasini o'chiradi. \`while\` orqali hammasini tozalash mumkin.
+<pre><code>hayvonlar = ['it', 'mushuk', 'it', 'sigir', 'it']
+while 'it' in hayvonlar:
+    hayvonlar.remove('it')
+print(hayvonlar) # ['mushuk', 'sigir']</code></pre>
+
+### 4. Listlar o'rtasida ma'lumot ko'chirish
+<pre><code>tasdiqlanmagan = ['ali', 'vali', 'hasan']
+tasdiqlangan = []
+
+while tasdiqlanmagan:
+    mijoz = tasdiqlanmagan.pop() # Sug'urib olish
+    print(f"{mijoz.title()} tasdiqlandi.")
+    tasdiqlangan.append(mijoz)</code></pre>
+`,
+            19: `
+# #19 FUNKSIYA (def)
+
+### 1. Funksiya nima?
+Funksiya — ma'lum bir vazifani bajarishga qaratilgan va dastur davomida yuzlab marta qayta chaqirish mumkin bo'lgan avtonom kod bloki.
+<pre><code>def salom_ber(): # Funksiya yaratildi
+    print("Assalomu alaykum!")
+
+salom_ber() # Funksiya chaqirildi
+salom_ber()</code></pre>
+
+### 2. Parametr (Argument) qabul qilish
+Funksiyaga ishlashi uchun tashqaridan ma'lumot (xom-ashyo) berish mumkin.
+<pre><code>def yosh_hisobla(ism, tugilgan_yil):
+    yosh = 2026 - tugilgan_yil
+    print(f"{ism.title()} {yosh} yoshda.")
+
+yosh_hisobla("Kamron", 2006)
+yosh_hisobla("Ali", 1990)</code></pre>
+
+### 3. Standart qiymat (Default value)
+Agar funksiya chaqirilganda parametr berilmasa, u o'zining zaxira (standart) qiymatidan foydalanadi.
+<pre><code>def salom_ber(ism="Do'stim"):
+    print(f"Salom, {ism}!")
+
+salom_ber("Kamron") # Salom, Kamron!
+salom_ber()         # Salom, Do'stim!</code></pre>
+
+### 4. Docstring (Funksiya uchun hujjat)
+Professional dasturchilar doim o'zlari yozgan funksiyaga ta'rif (Docstring) qoldirishadi. U uchta qo'shtirnoq ichida yoziladi.
+<pre><code>def kvadrat_top(son):
+    """Kiritilgan sonning kvadratini hisoblaydigan funksiya."""
+    print(son ** 2)</code></pre>
+`,
+            20: `
+# #20 QIYMAT QAYTARUVCHI FUNKSIYA (Return)
+
+### 1. Return ma'nosi
+Oldingi darsda funksiya natijani to'g'ridan-to'g'ri \`print\` qilgan edi. Endi biz funksiyadan chiqqan tayyor natijani o'zgaruvchiga saqlab olish (yoki boshqa funksiyaga uzatish) uchun \`return\` dan foydalanamiz.
+<pre><code>def toliq_ism_yasa(ism, familiya):
+    toliq = f"{ism.title()} {familiya.title()}"
+    return toliq # Natijani tashqariga uzatamiz
+
+talaba1 = toliq_ism_yasa("Kamronbek", "Dasturchiyev")
+print(f"Bazada ro'yxatga olindi: {talaba1}")</code></pre>
+
+### 2. Ixtiyoriy Argumentlar
+Ba'zi ma'lumotlarni kiritish majburiy bo'lmasligi mumkin (masalan, otasining ismi). Uni standart holatda bo'sh (\`''\`) qoldiramiz.
+<pre><code>def profil(ism, familiya, otasining_ismi=''):
+    if otasining_ismi:
+        return f"{ism} {otasining_ismi} {familiya}"
+    else:
+        return f"{ism} {familiya}"
+
+print(profil("Ali", "Valiyev", "Hasanovich"))
+print(profil("Olim", "Hakimov"))</code></pre>
+
+### 3. Lug'at (Dictionary) qaytarish
+Funksiya nafaqat matn, balki butun boshli ma'lumotlar bazasini (lug'at) ham yig'ib qaytarishi mumkin.
+<pre><code>def avto_info(model, rang, karobka, narx):
+    avto = {
+        'model': model,
+        'rang': rang,
+        'karobka': karobka,
+        'narx': narx
+    }
+    return avto
+
+avto1 = avto_info("Malibu", "Qora", "Avtomat", 35000)
+print(avto1['model'])</code></pre>
+
+### 4. Bir nechta qiymat qaytarish (Tuple)
+Python bir vaqtning o'zida bir nechta natijani (\`tuple\` ko'rinishida) ham qaytara oladi.
+<pre><code>def hisobla(a, b):
+    yigindi = a + b
+    ayirma = a - b
+    return yigindi, ayirma # Ikkita natija chiqadi
+
+qosh, ayir = hisobla(10, 5)
+print(qosh, ayir)</code></pre>
+`,
+            21: `
+# #21 FUNKSIYA VA RO'YXAT
+
+### 1. Funksiyaga ro'yxat uzatish
+O'zgaruvchilarni yakka-yakka uzatgandan ko'ra, tayyor \`list\` ni uzatib, funksiya ichida aylanib chiqish qulay.
+<pre><code>def bahola(ismlar):
+    for ism in ismlar:
+        print(f"Talaba {ism.title()} a'lo baho oldi.")
+
+talabalar = ['ali', 'vali', 'hasan']
+bahola(talabalar)</code></pre>
+
+### 2. Funksiya ichida ro'yxatni o'zgartirish
+Diqqat! Agar siz funksiya ichida uzatilgan ro'yxatga amallar bajarsangiz (masalan, \`pop\`), asl ro'yxat ham o'zgaradi!
+<pre><code>def katta_harf_qil(matnlar):
+    for i in range(len(matnlar)):
+        matnlar[i] = matnlar[i].title()
+
+ismlar = ['ali', 'vali']
+katta_harf_qil(ismlar)
+print(ismlar) # ['Ali', 'Vali'] bo'lib o'zgardi!</code></pre>
+
+### 3. Asl nusxani saqlab qolish
+Asl ro'yxat buzilmasligi uchun, funksiyaga uning to'liq klonini (nusxasini) \`[:]\` orqali berish kerak.
+<pre><code># Klonni uzatish:
+katta_harf_qil(ismlar[:]) </code></pre>
+
+### 4. Murakkab misol
+Ro'yxatdan o'qib, lug'atga joylovchi funksiya:
+<pre><code>def baholash(ismlar):
+    baholar = {}
+    for ism in ismlar:
+        baho = input(f"{ism.title()}ning bahosi: ")
+        baholar[ism] = baho
+    return baholar
+
+talabalar = ['Ali', 'Gani']
+natija = baholash(talabalar)
+print(natija)</code></pre>
+`,
+            22: `
+# #22 MOSLASHUVCHAN FUNKSIYA (*args, **kwargs)
+
+### 1. *args (Kop argumentlar qabul qilish)
+Ba'zan foydalanuvchi funksiyaga nechta parametr kiritishini oldindan bilmaymiz (masalan, cheksiz sonlarni qo'shish). Shunday paytda \`*args\` (arguments) yordamga keladi. U barcha kiritilgan qiymatlarni \`tuple\` (o'zgarmas ro'yxat) qilib oladi.
+<pre><code>def summa(*sonlar):
+    yigindi = 0
+    for son in sonlar:
+        yigindi += son
+    return yigindi
+
+print(summa(1, 2, 3, 4, 5)) # Natija: 15
+print(summa(10, 20))        # Natija: 30</code></pre>
+
+### 2. Oddiy parametr bilan *args ni qo'shish
+Agar majburiy parametr ham kerak bo'lsa, u doim \`*args\` dan oldin yoziladi!
+<pre><code>def pitssa_yasa(olchami, *masalliqlari):
+    print(f"\\n{olchami} sm pitssa tayyorlanmoqda:")
+    for m in masalliqlari:
+        print(f"- {m}")
+
+pitssa_yasa(30, 'pishloq', 'sosiska', 'pomidor')</code></pre>
+
+### 3. **kwargs (Lug'at ko'rinishidagi argumentlar)
+Agar foydalanuvchi argumentlarni nomi bilan (key=value) kiritishini xohlasak, \`**kwargs\` (keyword arguments) ishlatamiz. U ma'lumotlarni \`dict\` (lug'at) qilib qabul qiladi. Backendda bu mutlaq ehtiyoj!
+<pre><code>def avto_info(kompaniya, model, **qoshimcha_malumotlar):
+    # Majburiy qismlarni lug'atga qo'shamiz
+    qoshimcha_malumotlar['kompaniya'] = kompaniya
+    qoshimcha_malumotlar['model'] = model
+    return qoshimcha_malumotlar
+
+avto1 = avto_info("GM", "Malibu", rang="qora", yil=2023, probeg=0)
+print(avto1)</code></pre>
+
+### 4. *args va **kwargs kombinatsiyasi
+<pre><code>def hamma_narsa(*args, **kwargs):
+    print("Ro'yxat:", args)
+    print("Lug'at:", kwargs)
+
+hamma_narsa(1, 2, 'salom', ism='Ali', yosh=20)</code></pre>
+`,
+            23: `
+# #23 MODULLAR (Modules)
+
+### 1. Nima uchun kerak?
+Loyiha kattalashgani sari hamma funksiyalarni bitta \`main.py\` faylga yozish dahshatli tartibsizlikka olib keladi. Kodni qismlarga (modullarga) bo'lib, keyin ularni chaqirish kerak.
+
+### 2. O'zimizning modulni yaratish
+Tasavvur qiling, sizda \`math_functions.py\` fayli bor:
+<pre><code># math_functions.py fayli ichida
+def qosh(a, b): return a + b
+def ayir(a, b): return a - b</code></pre>
+
+### 3. Modulni chaqirish (import)
+Endi asosiy faylda (masalan, \`main.py\`) uni ishlatamiz:
+<pre><code># 1-usul: Butun modulni chaqirish
+import math_functions
+print(math_functions.qosh(5, 5))
+
+# 2-usul: O'ziga nom berib chaqirish (as)
+import math_functions as mf
+print(mf.ayir(10, 5))</code></pre>
+
+### 4. Muayyan funksiyalarni chaqirish (from ... import)
+Eng ko'p ishlatiladigan usul. Bizga modulning ichidagi hamma narsa emas, faqat bitta funksiyasi kerak bo'lsa:
+<pre><code>from math_functions import qosh, ayir
+
+print(qosh(10, 20)) # Endi modul nomini yozish shart emas!</code></pre>
+`,
+            24: `
+# #24 FUNKSIYALAR. SO'NGSO'Z. (Lambda)
+
+### 1. Lambda (Nomsiz Funksiyalar)
+Lambda — faqat bitta qatordan iborat, nomsiz (def siz) yoziladigan qisqa funksiya.
+Sintaksis: \`lambda argumentlar: ifoda\`
+<pre><code># Oddiy def funksiya
+def kvadrat(x):
+    return x * x
+
+# Lambda shakli
+kvadrat_lambda = lambda x: x * x
+print(kvadrat_lambda(5)) # 25</code></pre>
+
+### 2. map() funksiyasi
+Ro'yxatdagi BARCHA elementlarga bitta funksiyani qo'llab chiqadi. Lambda bilan ajoyib kombinatsiya.
+<pre><code>sonlar = [1, 2, 3, 4, 5]
+# Har bir sonning kvadratini ro'yxat qilish
+kvadratlar = list(map(lambda x: x*x, sonlar))
+print(kvadratlar) # [1, 4, 9, 16, 25]</code></pre>
+
+### 3. filter() funksiyasi
+Ro'yxat ichidan biz bergan "shart" ga to'g'ri keladiganlarini suzib (filtrlab) oladi.
+<pre><code>sonlar = [10, 15, 20, 25, 30]
+# Faqat juft sonlarni ajratib olamiz
+juftlar = list(filter(lambda x: x % 2 == 0, sonlar))
+print(juftlar) # [10, 20, 30]</code></pre>
+
+### 4. Xulosa
+Lambda funksiyalari kodni keskin qisqartiradi, ammo uni murakkab logikalar uchun ishlatmang, kod tushunarsiz bo'lib qolishi mumkin!
+`,
+            25: `
+# #25 "SON TOPISH" O'YINI
+
+### 1. Logika va Maqsad
+Kompyuter 1 dan 10 gacha bo'lgan tasodifiy sonni yashiradi. Biz o'sha sonni topishimiz kerak. Biz taxmin qilganda, u "kattaroq" yoki "kichikroq" deb yordam beradi.
+
+### 2. Random Moduli
+Tasodifiy son tanlash uchun Python standart kutubxonasidan \`random\` modulini chaqiramiz.
+<pre><code>import random
+tasodifiy_son = random.randint(1, 10)
+print("1 dan 10 gacha son o'yladim, toping!")</code></pre>
+
+### 3. Asosiy While tsikli (Foydalanuvchi topishi)
+<pre><code>urinishlar = 0
+while True:
+    urinishlar += 1
+    taxmin = int(input("Taxminingiz: "))
+    
+    if taxmin < tasodifiy_son:
+        print("Xato, kattaroq son o'yladim.")
+    elif taxmin > tasodifiy_son:
+        print("Xato, kichikroq son o'yladim.")
+    else:
+        print(f"Topdingiz! {urinishlar} ta urinish bilan yutdingiz!")
+        break</code></pre>
+
+### 4. Qiyinlik darajasini oshirish
+Kompyuter navbati kelganda, o'yinchi son o'ylaydi va kompyuter topishga harakat qiladi. Bu funksiyalarni \`def\` orqali modullarga bo'lib yozish tavsiya etiladi.
+`,
+            26: `
+# #26 "SO'Z TOPISH" O'YINI
+
+### 1. Logika
+Bu mashhur "Hangman" (Dorboz) o'yinining o'zginasi. Ma'lum bir so'zlar bazasidan tasodifiy so'z tanlanadi. Foydalanuvchi so'zni harfma-harf kiritib topishi kerak.
+
+### 2. Boshlang'ich Holat (Yashirin So'z)
+Tanlangan so'z uzunligicha chiziqchalar \`-\` chiqariladi.
+<pre><code>import random
+sozlar = ['python', 'backend', 'django', 'bot']
+soz = random.choice(sozlar).lower()
+yashirin = "-" * len(soz)
+print(f"Men o'ylagan so'z: {yashirin}")</code></pre>
+
+### 3. Asosiy Logika (Harflarni ochish)
+<pre><code>topilgan_harflar = []
+while True:
+    harf = input("Harf kiriting: ").lower()
+    
+    if harf in topilgan_harflar:
+        print("Bu harfni oldin kiritgansiz.")
+        continue
+        
+    topilgan_harflar.append(harf)
+    
+    display = ""
+    for h in soz:
+        if h in topilgan_harflar:
+            display += h
+        else:
+            display += "-"
+            
+    print(display)
+    
+    if "-" not in display:
+        print("Tabriklayman! So'zni topdingiz!")
+        break</code></pre>
+
+### 4. Urinishlarni cheklash
+O'yin qiziqroq bo'lishi uchun jami 5 ta xato qilish imkoniyatini qo'shib qo'ysangiz yanada mukammal loyiha bo'ladi.
+`,
+            27: `
+# #27 KIRILL-LOTIN TELEGRAM BOT
+
+### 1. Aiogram 3.x Arxitekturasi
+Bugungi kunda eng mashhur va tezkor backend (bot) kutubxonasi \`aiogram\` (aynan 3-versiyasi) hisoblanadi. U asinxron (async/await) ishlaydi!
+Terminalda o'rnatish: \`pip install aiogram\`
+
+### 2. Botning Asosiy Skeleti
+<pre><code>import asyncio
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import CommandStart
+
+TOKEN = "BU YERGA BOTFATHER'DAN OLINGAN TOKEN QO'YILADI"
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
+
+# /start komandasini ushlash
+@dp.message(CommandStart())
+async def cmd_start(message: types.Message):
+    await message.answer("Salom! Men Kirill-Lotin tarjimon botiman.")
+
+# Botni to'xtovsiz ishga tushirish (Polling)
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    # asyncio.run(main()) # IDE da ishlamaydi, serverda ishlaydi.
+    pass</code></pre>
+
+### 3. Tarjima mantiqini ulash (Transliterate)
+Buning uchun \`cyrtranslit\` kutubxonasi qulay.
+<pre><code># @dp.message()
+# async def tarjima_qil(message: types.Message):
+#     # Agar matnda kirill harflari bo'lsa, lotinga, aks holda kirillga o'girish
+#     text = message.text
+#     await message.answer(yangi_text)</code></pre>
+
+### 4. Muhim Eslatma
+PYMASTERS IDE (Pyodide) da internetga to'g'ridan to'g'ri \`TCP\` so'rovlar yuborib bo'lmaydi (WebAssembly cheklovlari tufayli). Shuning uchun bot kodlari asosan mahalliy (VS Code) da va Heroku/Render kabi serverlarda ishlatiladi.
+`,
+            28: `
+# #28 KLASSLAR (OOP)
+
+### 1. OOP (Obyektga Yo'naltirilgan Dasturlash)
+Hozirgacha biz funksiyalar (Procedural) bilan ishladik. Endi biz haqiqiy me'morlarga aylanib, obyektlar (chizmalar) yaratamiz. 
+**Klass (Class)** - bu chizma.
+**Obyekt (Instance)** - shu chizmadan yasalgan haqiqiy bino (narsa).
+
+### 2. Klass yaratish
+Klass nomlari odatda Bosh harf bilan (\`CamelCase\`) yoziladi.
+<pre><code>class Talaba:
+    """Talaba nomli chizma (qolip) yaratdik"""
+    pass
+
+# Chizmadan obyekt yaratamiz:
+talaba1 = Talaba()
+talaba2 = Talaba()
+print(type(talaba1)) # &lt;class '__main__.Talaba'&gt;</code></pre>
+
+### 3. Metod yaratish
+Klass ichida yozilgan funksiya **Metod** deb ataladi. U albatta \`self\` parametrini qabul qilishi shart. \`self\` - bu yasalayotgan narsaning o'ziga qaratilgan ishora.
+<pre><code>class Talaba:
+    def salomlash(self):
+        print("Assalomu alaykum!")
+
+t = Talaba()
+t.salomlash() # Obyekt o'zining metodini chaqiryapti</code></pre>
+
+### 4. Nimaga OOP kerak?
+Katta platformalarni (masalan, bank ilovasi, o'yinlar) funksiyalar orqali yozib bo'lmaydi. U yerda har bir \`Mijoz\`, \`Hisob\`, \`O'yinchi\` alohida klass bo'lib, o'z xususiyatlariga ega bo'lishi kerak.
+`,
+            29: `
+# #29 OBYEKTLAR BILAN ISHLASH
+
+### 1. __init__ (Konstruktor) Metodi
+Obyekt tug'ilishi bilanoq dastlabki xususiyatlarni qabul qilib olishi uchun \`__init__\` metodi avtomatik ishga tushadi. 
+<pre><code>class Talaba:
+    def __init__(self, ism, yosh):
+        self.ism = ism # Obyektning ismi = berilgan ism
+        self.yosh = yosh
+        
+t = Talaba("Kamron", 20)
+print(t.ism) # Natija: Kamron</code></pre>
+
+### 2. Standart xususiyatlar
+Ba'zi xususiyatlarni foydalanuvchi kiritmaydi, balki obyekt tug'ilganda avtomatik beriladi (masalan, yangi talabaning bosqichi doim 1).
+<pre><code>class Talaba:
+    def __init__(self, ism):
+        self.ism = ism
+        self.bosqich = 1 # Standart xususiyat
+        
+    def get_info(self):
+        return f"{self.ism}, {self.bosqich}-bosqich talabasi"
+
+t1 = Talaba("Ali")
+print(t1.get_info())</code></pre>
+
+### 3. Xususiyatni o'zgartirish
+Xususiyatlarni to'g'ridan-to'g'ri nuqta (\`.\`) orqali yoki maxsus metodlar yordamida o'zgartirish mumkin.
+<pre><code># 1-usul: To'g'ridan-to'g'ri (Tavsiya etilmaydi)
+t1.bosqich = 2 
+
+# 2-usul: Metod orqali (Professional)
+class Talaba:
+    # ... init ...
+    def bosqichni_yangila(self):
+        self.bosqich += 1</code></pre>
+
+### 4. Obyektlar o'rtasida munosabat
+Bitta klassning obyekti boshqa klassning xususiyati bo'lishi mumkin. Masalan \`Universitet\` klassi ichida \`Talaba\` lar ro'yxati saqlanadi.
+`,
+            30: `
+# #30 VORISLIK VA POLIMORFIZM
+
+### 1. Vorislik (Inheritance)
+Ota (Super) klassdagi barcha xususiyatlarni Bola (Sub) klassga ko'chirib o'tkazish. Bu kod takrorlanishining oldini oladi.
+<pre><code>class Shaxs:
+    def __init__(self, ism, familiya):
+        self.ism = ism
+        self.familiya = familiya
+
+# Talaba Shaxs klassidan meros olyapti
+class Talaba(Shaxs):
+    def __init__(self, ism, familiya, id_raqam):
+        # Ota klassning init metodini chaqirish:
+        super().__init__(ism, familiya)
+        self.id_raqam = id_raqam
+
+t = Talaba("Kamron", "Dasturchiyev", "ID12345")
+print(t.ism) # Ota klassning xususiyati ishladi!</code></pre>
+
+### 2. Polimorfizm (Qayta yozish - Overriding)
+Agar Ota klassdagi metod Bola klassga to'g'ri kelmasa (yoki uni o'zgartirish kerak bo'lsa), o'sha nomdagi metod bola klassda qayta yoziladi.
+<pre><code>class Shaxs:
+    def info(self): return "Men oddiy shaxsman."
+
+class Talaba(Shaxs):
+    def info(self): return "Men talabaman, o'qishim kerak." # Qayta yozildi
+
+sh = Shaxs()
+print(sh.info())
+tal = Talaba()
+print(tal.info())</code></pre>
+
+### 3. Multiple Inheritance (Ko'p Vorislik)
+Python bir vaqtning o'zida ikkita har xil Ota klassdan bitta Bola klassga meros olishga ruxsat beradi (\`class Bola(Ota1, Ota2):\`), lekin bu murakkablikni oshirgani uchun ko'p tavsiya etilmaydi.
+
+### 4. Xulosa
+Vorislik yordamida biz "Foydalanuvchi" degan katta klass ochib, keyin undan "Admin", "Mijoz", "Sotuvchi" degan kichik klasslarni bitta qatorda yaratib olishimiz mumkin.
+`,
+            31: `
+# #31 INKAPSULYATSIYA
+
+### 1. Ma'lumotlarni yashirish (Encapsulation)
+Klass ichidagi ba'zi sezgir xususiyatlar (parollar, plastik karta balansi) ni tashqaridan turib hech kim to'g'ridan-to'g'ri o'zgartirib yoki ko'ra olmasligini ta'minlash.
+
+### 2. Public, Protected va Private
+Pythonda ma'lumotni himoyalashning 3 bosqichi bor:
+* **Public (Ochiq):** \`self.ism\` (hamma ko'radi)
+* **Protected (Himoyalangan):** \`self._telefon\` (1 ta pastki chiziq. Faqat o'zi va vorislar ishlatsin degan ogohlantirish, lekin cheklov yo'q).
+* **Private (Yopiq):** \`self.__balans\` (2 ta chiziq. Hech kim tashqaridan aralasha olmaydi).
+
+### 3. Private Xususiyat bilan ishlash
+<pre><code>class Karta:
+    def __init__(self, raqam, pin):
+        self.raqam = raqam
+        self.__pin = pin # Private xususiyat
+        self.__balans = 10000
+
+karta = Karta("86001234", 1111)
+print(karta.raqam)
+# print(karta.__balans) # XATO! Tashqaridan ko'rinmaydi.</code></pre>
+
+### 4. Private ma'lumotni o'qish/o'zgartirish (Getter, Setter)
+Yopiq ma'lumotga faqat klassning ichidan, maxsus metodlar orqali yetishiladi.
+<pre><code>class Karta:
+    # ...
+    def get_balans(self): # Getter
+        return self.__balans
+        
+    def pul_yechish(self, summa): # Setter/Updater
+        if summa <= self.__balans:
+            self.__balans -= summa
+            return "Muvaffaqiyatli!"
+        return "Mablag' yetarli emas."</code></pre>
+`,
+            32: `
+# #32 DUNDER (MAGIC) METODLAR
+
+### 1. Dunder metod nima?
+Double Under (Ikki marta pastki chiziq) bilan boshlanadigan \`__metod__\` lar. Biz ularni to'g'ridan-to'g'ri chaqirmaymiz, Python o'zi kerakli joyda avtomatik ishlatadi. Eng mashhuri \`__init__\` dir.
+
+### 2. Obyektni ekranga chiqarish (__str__ va __repr__)
+Agar obyektni shunchaki \`print(obyekt)\` qilsangiz, kompyuter tushunarsiz xotira manzilini (0x123A) chiqaradi. Buni to'g'irlash uchun \`__repr__\` yoziladi.
+<pre><code>class Avto:
+    def __init__(self, model):
+        self.model = model
+        
+    def __repr__(self):
+        return f"Avto: {self.model}"
+
+m1 = Avto("Malibu")
+print(m1) # Avtomatik __repr__ chaqirildi! (Avto: Malibu)</code></pre>
+
+### 3. Obyektlar uzunligi va qiymati (__len__)
+Obyekt ustida \`len()\` funksiyasi ishlashi uchun:
+<pre><code>class Salon:
+    def __init__(self):
+        self.mashinalar = ['Malibu', 'Cobalt']
+        
+    def __len__(self):
+        return len(self.mashinalar)
+
+s = Salon()
+print(len(s)) # 2</code></pre>
+
+### 4. Obyektlarni qo'shish va taqqoslash
+Ikkita mustaqil obyektni bir-biriga qo'shganda (\`+\`) \`__add__\` metodi, ularni taqqoslaganda (\`==\`) \`__eq__\` yoki (\`>\`) \`__gt__\` metodlari ishga tushadi. Bu murakkab operatsiyalarni osonlashtiradi.
+`,
+            33: `
+# #33 FAYLLAR BILAN ISHLASH
+
+### 1. Faylni ochish va yozish (write)
+Ma'lumotlar kompyuter xotirasida (RAM) dastur yopilguncha turadi. Ularni saqlab qolish uchun bazaga yoki Matnli faylga yozamiz. \`open()\` orqali ochiladi.
+<pre><code># 'w' - write (yozish, borini o'chirib yozadi)
+fayl = open('baza.txt', 'w')
+fayl.write("Kamronbek Dasturchi\\n")
+fayl.close() # DOIM YOPISH KERAK!</code></pre>
+
+### 2. Xavfsiz usul (with open)
+Faylni ochgach uni yopish yoddan chiqsa tizim sekinlashadi. \`with\` orqali ishlasak, kod bloki tugagach Python o'zi faylni zudlik bilan qulflaydi.
+<pre><code># 'a' - append (fayl oxiridan yangi ma'lumot qo'shish)
+with open('baza.txt', 'a') as fayl:
+    fayl.write("Yangi mijoz qo'shildi!\\n")</code></pre>
+
+### 3. Fayldan o'qish (read)
+<pre><code># 'r' - read (o'qish rejimi)
+with open('baza.txt', 'r') as fayl:
+    matn = fayl.read()
+    print(matn)</code></pre>
+
+### 4. Haqiqiy DB ga ko'tarilish (SQLite)
+Sodda text fayllar katta ma'lumotlar (Millionlab yozuvlar) ni ko'tara olmaydi. Backendda buning o'rniga SQLite3 (kichik hajm) va PostgreSQL (katta loyihalar) ishlatiladi.
+<pre><code>import sqlite3
+# SQLite bilan bog'lanish va baza (fayl) yaratish
+# conn = sqlite3.connect('baza.db') 
+# cursor = conn.cursor()
+# cursor.execute("CREATE TABLE users (id, name)")</code></pre>
+`,
+            34: `
+# #34 JSON
+
+### 1. JSON nima va nega kerak?
+JSON (JavaScript Object Notation) — butun dunyo bo'ylab Turli xil dasturlash tillari (Python, JS, Java, PHP) bir-biri bilan gaplashishi uchun standart Format. U bizning "Lug'at" ga deyarli 100% o'xshaydi.
+
+### 2. Pythondan JSON ga (dumps)
+Pythondagi obyekt (dict, list) ni JSON (matn) formatiga o'tkazish.
+<pre><code>import json
+
+bemor = {
+    "ism": "Ali",
+    "yosh": 30,
+    "kasal": False # Pythonda False, JSON da false bo'ladi
+}
+# O'girish
+json_matn = json.dumps(bemor, indent=4)
+print(json_matn)</code></pre>
+
+### 3. JSON dan Pythonga (loads)
+Telegram, Ob-havo yoki Valyuta kurslari API laridan kelgan ma'lumot (string) ni Pythonda aylantirish uchun uni \`dict\` ga o'giramiz.
+<pre><code># Tasavvur qiling internetdan shu ma'lumot keldi:
+kelgan_api = '{"ism": "Vali", "yosh": 25}'
+
+python_lugat = json.loads(kelgan_api)
+print(python_lugat['ism']) # Vali</code></pre>
+
+### 4. Faylga saqlash (dump va load)
+Yuqoridagi buyruqlarda \`s\` (string) bor edi. Agar ma'lumotni \`.json\` faylga saqlamoqchi bo'lsak \`dump()\` va \`load()\` o'zi (s yozilmaydi) ishlatiladi.
+<pre><code># Faylga yozish
+with open('data.json', 'w') as f:
+    json.dump(bemor, f)</code></pre>
+`,
+            35: `
+# #35 XATOLAR BILAN ISHLASH (Try-Except)
+
+### 1. Kutilmagan Xatoliklar (Exceptions)
+Dasturingiz to'g'ri yozilgan bo'lsa ham, ba'zida server uzilishi yoki foydalanuvchi "Yosh" so'ralgan joyga "Yigirma" deb matn kiritib yuborishi orqali dastur Crash beradi (To'xtab qoladi).
+
+### 2. Try - Except Bloki (Dasturni qutqarish)
+\`try\` blokiga "shubhali" kod yoziladi. Agar kod xatosiz ishlasa, \`except\` ga umuman o'tilmaydi. Agar xato yuz bersa, dastur qotib qolmasdan \`except\` dagi zaxira matnni chiqaradi.
+<pre><code>yil = input("Tug'ilgan yilingiz: ")
+try:
+    yosh = 2026 - int(yil)
+    print(f"Yoshingiz: {yosh}")
+except ValueError:
+    print("Xato! Iltimos faqat raqam kiriting.")
+print("Dastur ishlashda davom etmoqda...")</code></pre>
+
+### 3. Xato turini ushlab olish (ZeroDivisionError)
+Nolga bo'lish kabi xatoliklarni aniq ushlash mumkin.
+<pre><code>try:
+    print(10 / 0)
+except ZeroDivisionError:
+    print("Sonni 0 ga bo'lib bo'lmaydi!")</code></pre>
+
+### 4. Else va Finally
+* \`else:\` - Try ichida xato bo'lmagandagina ishlaydi.
+* \`finally:\` - Xato bo'lsa ham, bo'lmasa ham OXIRIDA albatta ishlaydigan blok (masalan DB ulanishini yopish).
+`,
+            36: `
+# #36 FUNKSIYANI TEKSHIRISH (Unittest)
+
+### 1. Nega Test kerak?
+Jiddiy proyektlarda minglab funksiyalar bo'ladi. Bitta kodni o'zgartirish tasodifan boshqasini buzib qo'yishi mumkin. Kod ishonchli ekanini tekshirish uchun o'zimiz unga Test yozamiz.
+
+### 2. unittest Moduli
+Python standart kutubxonasida test yozish uchun \`unittest\` moduli tayyor holda keladi. Test yoziladigan klass \`unittest.TestCase\` dan meros oladi.
+
+### 3. Oddiy Test Namunasi
+<pre><code>import unittest
+
+# Tekshirilishi kerak bo'lgan asosiy funksiya:
+def qosh(a, b): return a + b
+
+# Test klassi
+class TestMatematika(unittest.TestCase):
+    def test_qosh(self):
+        # assertEqual - bu ikkalasi tengmi degani
+        self.assertEqual(qosh(2, 3), 5)
+        self.assertEqual(qosh(-1, 1), 0)
+
+# Agar Pyodide (terminal) da emasmiz desak ishga tushirish:
+# if __name__ == '__main__':
+#     unittest.main()</code></pre>
+
+### 4. Boshqa assert metodlar
+* \`assertTrue(shart)\` - Shart to'g'rimi?
+* \`assertFalse(shart)\` - Shart xatomi?
+* \`assertIn(a, list)\` - A qidirilayotgan ro'yxat ichida bormi?
+`,
+            37: `
+# #37 KLASSNI TEKSHIRISH
+
+### 1. Klasslarni Test qilish
+Xuddi funksiyalar singari, klass ichidagi xususiyatlar va metodlarni ham to'g'ri ishlayotganiga amin bo'lishimiz kerak.
+
+### 2. setUp() metodi bilan kodni qisqartirish
+Tasavvur qiling klassingizning 10 ta tekshiriladigan joyi bor. Har safar obyektni (\`Mijoz('Ali')\`) boshqatdan yozib o'tirmaslik uchun, \`setUp()\` metodidan foydalaniladi. Bu metod har bir testdan oldin eng birinchi bo'lib bir marta ishga tushadi.
+
+### 3. Test Yozish Misoli
+<pre><code>import unittest
+
+# Asosiy Klass
+class Anketa:
+    def __init__(self, savol):
+        self.savol = savol
+        self.javoblar = []
+        
+    def javob_qosh(self, javob):
+        self.javoblar.append(javob)
+
+# Test Klassi
+class TestAnketa(unittest.TestCase):
+    def setUp(self):
+        # Obyekt tayyorlab qo'yamiz (barcha testlar ishlata oladi)
+        self.so'rov = Anketa("Dasturlash tilini tanlang")
+        self.javob = "Python"
+        
+    def test_javob_saqlanishi(self):
+        self.so'rov.javob_qosh(self.javob)
+        self.assertIn(self.javob, self.so'rov.javoblar)</code></pre>
+
+### 4. Muvaffaqiyatli xabar (OK)
+Agar testlar soni 100 ta bo'lsa ham va hammasi to'g'ri chiqsa konsolda kichkina \`...\` va bitta so'z: \`OK\` chiqadi. Xato bo'lsa, qizil ekranda \`FAILED\` yozuvi bilan aniq qaysi qatorda xato ekani ko'rsatiladi.
+`,
+            38: `
+# #38 PYTHON STANDART KUTUBXONASI
+
+### 1. Standard Library nima?
+Python tilini kompyuterga o'rnatganingizda, o'zi bilan birga keladigan "Tayyor qurollar" jamlanmasi. Ularni yuklash shart emas, faqat \`import\` orqali chaqiriladi.
+
+### 2. Datetime moduli (Vaqt)
+Vaqt, sana va taymerlar bilan ishlash uchun ishlatiladi.
+<pre><code>import datetime
+
+bugun = datetime.date.today()
+hozir = datetime.datetime.now()
+
+print(bugun)               # 2026-11-01
+print(hozir.strftime("%H:%M")) # 13:22</code></pre>
+
+### 3. Math moduli
+Eng murakkab matematik funksiyalar (ildiz, sinus, logarifm) ni bajaradi.
+<pre><code>import math
+print(math.sqrt(25)) # Ildiz = 5.0
+print(math.pi)       # 3.1415...</code></pre>
+
+### 4. Random moduli (Tasodifiylik)
+Tasodifiy sonlar, parollar generatsiyasi va lotereyalar yozish uchun:
+<pre><code>import random
+
+son = random.randint(1, 100) # 1-100 oralig'ida
+ismlar = ['Ali', 'Vali', 'Gani']
+golib = random.choice(ismlar) # Ro'yxatdan birini tanlaydi
+print(golib)</code></pre>
+`,
+            39: `
+# #39 PIP VA TASHQI KUTUBXONALAR
+
+### 1. PyPI va PIP (Paket menejeri)
+Python Package Index (PyPI) - butun dunyodagi dasturchilar tomonidan yozilgan 400.000 dan ortiq tayyor kutubxonalar ombori (masalan Django, Aiogram, Requests).
+Uni o'rnatish uchun Konsol (Terminal) da \`pip\` buyrug'i ishlatiladi.
+
+### 2. Kutubxona O'rnatish (Install)
+Terminalda:
+<pre><code>pip install requests
+pip install bs4
+pip install aiogram</code></pre>
+Ular internetdan tortib olinadi va virtual muhitingizga (venv) o'rnatiladi.
+
+### 3. Requests (Internetga ulanish)
+Python orqali boshqa saytlardan ma'lumot tortib olish (Web Scraping).
+<pre><code># import requests
+# response = requests.get('https://api.github.com')
+# print(response.status_code) # 200 (OK)
+# print(response.json())</code></pre>
+
+### 4. Requirements (Ro'yxat)
+Loyihani Githubga yoki Serverga (Deploy) yuklaganda, sizning kompyuteringizdagi barcha PIP paketlar \`requirements.txt\` fayliga saqlanib uzatiladi.
+<pre><code>pip freeze > requirements.txt
+# Serverda o'rnatish:
+pip install -r requirements.txt</code></pre>
+`,
+            40: `
+# #40 SO'NGSO'Z VA KEYINGI QADAMLAR
+
+### 1. Asoslarni Yakunladingiz!
+Tabriklaymiz, Kamron! Siz PYMASTERS da Python Sintaksisi, O'zgaruvchilar, Logic, To'plamlar, Funksiyalar, OOP, Fayllar va JSON bilan ishlashni to'liq o'zlashtirdingiz.
+
+### 2. Nima qilamiz endi? (Backend & Aiogram)
+Keyingi qadamlar Aiogram 3 orqali murakkab botlar yozishdir. Katta botlarda kodlar \`main.py\` ga tiqilmaydi. Ularda:
+- **Handlers:** Komandalarni (\`/start\`) ushlab javob beruvchilar.
+- **Keyboards:** Tugmalar (Inline va Reply).
+- **Middlewares:** Xabarni botga yetib borishidan oldin ushlab qolib tekshiruvchilar (Masalan, Kanalga obunani majburiy tekshirish).
+- **Filters:** Faqat Admin xabar yozganda yoki Faqat Guruhda ishlashini ta'minlovchi filtrlar.
+
+### 3. Ma'lumotlar Bazasi (PostgreSQL & SQLAlchemy)
+SQLite3 yaxshi, lekin katta loyihalarda PostgreSQL va **ORM** (Kodni SQL ga o'zgartiruvchi texnologiya, masalan SQLAlchemy, TortoiseORM) ishlatiladi. Siz endi shularni o'rganishingiz kerak.
+
+### 4. Frameworklar (Django / FastAPI)
+Saytlar va mobil ilovalarning backend (API) qismini qurish uchun \`Django\` (monolit, katta loyihalar) yoki \`FastAPI\` (juda tez va zamonaviy mikroxizmatlar) ga o'ting.
+Omad tilayman!
+`,
+            41: `
+# #41 RegEx (Regular Expressions)
+
+### 1. RegEx nima?
+Muntazam Ifodalar — bu minglab sahifa matn ichidan o'zingizga kerakli andozadagi narsalarni (masalan faqat telefon raqamlarni, yoki @ belgisi bor Emaillarni) super-tezlikda izlab topish algoritmi.
+
+### 2. 're' Moduli
+Pythonda regex bilan ishlash uchun tayyor \`re\` kutubxonasi mavjud.
+<pre><code>import re
+matn = "Aloqa uchun: +998901234567 yoki +998711234567"</code></pre>
+
+### 3. Andozalar (Patterns) tuzish
+* \`\\d\` - Faqat raqam (Digit)
+* \`\\w\` - So'z yoki harf (Word)
+* \`+\`  - Bitta yoki undan ko'p takrorlanish
+* \`{9}\` - Aynan 9 marta takrorlanish
+
+<pre><code># Telefon raqam andozasi: + belgisi, 998, va 9 ta raqam
+andoza = r"\\+998\\d{9}"</code></pre>
+
+### 4. re.findall() 
+Matn ichidan andozaga tushadigan BARCHA qiymatlarni ro'yxat (list) qilib qaytaradi.
+<pre><code>raqamlar = re.findall(andoza, matn)
+print("Topilgan raqamlar:", raqamlar)
+# Natija: ['+998901234567', '+998711234567']</code></pre>
+`,
+            42: `
+# #42 PROMPT ENGINEERING: AI BILAN KOD YOZISH SIRLARI
+
+### 1. Zamonaviy Dasturchi va Sun'iy Idrok (AI)
+Bugungi kunda dasturchining eng muhim qobiliyati — quruq kod yozish emas, balki muammoni hal qilish va Sun'iy Idrok (AI) ga to'g'ri texnik topshiriq (prompt) bera olishdir. AI'dan "menga sayt yozib ber" deb so'rash — eng katta xato. Dasturchi AI'ni o'zining "Jorj"i (yordamchisi) kabi boshqarishi kerak.
+
+### 2. Asosiy AI Modellar va Ularning Ixtisoslashuvi
+Har bir AI modelining o'z ustunlik tomonlari bor:
+* **Claude 3.5 Sonnet (Anthropic):** Dasturlash va kod yozishda hozirgi kunda eng kuchli model. Katta hajmdagi fayllarni o'qish, frontend vizuallari va murakkab backend arxitekturalarini refaktoring (yaxshilash) qilishda tengsiz.
+* **ChatGPT (GPT-4o - OpenAI):** Mantiqiy masalalar, algoritmlar va ma'lumotlar bazasi (SQL) bilan ishlashda juda kuchli. Umuman yangi g'oyalar va logika qurishda doim tavsiya etiladi.
+* **Gemini 1.5 Pro (Google):** Ulkan xotiraga (kontekst oynasiga) ega. Unga butun boshli loyiha papkasini (minglab qator kodni) yuklab, "Shu loyiha arxitekturasi qanday ishlashini tushuntir" deyish mumkin.
+
+### 3. Oltin Qoida: "C.R.E.A.T.E" Formulasi
+AI dan aniq va xatosiz kod olish uchun prompt ichida quyidagi qismlar aniq yozilgan bo'lishi shart:
+* **C - Character (Rol):** AI ga mutaxassis rolini bering ("Sen Senior Python Backend dasturchisisan").
+* **R - Request (Vazifa):** Nima qilish kerakligini aniq ayting.
+* **E - Examples (Misollar):** Qanday natija kutayotganingizni namuna qilib ko'rsating.
+* **A - Adjustments (Cheklovlar):** Nimalarni ishlatish mumkin emasligini qat'iy uqtiring ("Faqat aiogram 3 ishlat, telebot emas").
+* **T - Type (Format):** Javob qanday formatda bo'lishini bildiring ("Kodni tayyor fayl qilib ber" yoki "Faqat o'zgargan qatorni ko'rsat").
+
+### 4. Ideal Prompt Shabloni
+Quyida to'g'ri yozilgan professional prompt namunasini ko'rib chiqing.
+<pre><code>Rol: Sen 10 yillik tajribaga ega Python va FastAPI arxitektorisan.
+Vazifa: Menga foydalanuvchilarni ro'yxatdan o'tkazuvchi (Register) API yozib ber.
+Cheklovlar: Ma'lumotlar bazasi uchun faqat SQLAlchemy 2.0 va async ishlat. Parollarni heshlash qismi o'zbekcha yozilsin.
+Format: Kodni har bir qatoriga izoh (comment) qoldirib, OOP class ko'rinishida taqdim et.</code></pre>
+
+### 5. Xatolarni To'g'rilash (Iterative Debugging)
+AI yozgan kodda xatolik chiqsa, unga shunchaki "Kod ishlamadi" deyilmaydi. Xatoni va o'zgaruvchilarni to'liq tushuntirish kerak.
+<pre><code>Mening terminalimda quyidagi xatolik chiqdi:
+[Terminaldagi qizil xato yozuvini (Traceback) to'liq shu yerga nusxalab tashlang]
+
+Iltimos, yuqorida sen yozgan kodni qayerida xato ketganini tahlil qil va buni qanday to'g'rilashni bosqichma-bosqich tushuntir. Butun kodni qayta yozma, faqat xato bor qismini qaytar.</code></pre>
+`
+        };
+
+        const miniTests = [
+            // 1-blok: Print (Faqat 2-dars uchun ishlaydi, kod bloki indexi bo'yicha ulanadi)
+            [
+                {q: "1. Ekranga yozuv chiqarish buyrug'i?", opts: ["print()", "show()"], ans: 0},
+                {q: "2. 'Hello World' qaysi turdagi ma'lumot?", opts: ["String (Matn)", "Integer (Son)"], ans: 0},
+                {q: "3. print() funksiyasi ichiga son ham yozish mumkinmi?", opts: ["Ha, mumkin", "Yo'q, faqat matn"], ans: 0},
+                {q: "4. print() qaysi tilda ishlaydi?", opts: ["Python", "HTML"], ans: 0},
+                {q: "5. To'g'ri yozilgan kodni tanlang:", opts: ["print('Salom')", "print 'Salom'"], ans: 0}
+            ],
+            // 2-blok: String
+            [
+                {q: "1. O'zbekiston kabi so'zlarda qaysi qo'shtirnoq qulay?", opts: ['Ikkitalik (" ")', "Bittalik (' ')"], ans: 0},
+                {q: "2. Matnlar qaysi belgi orasiga olinishi shart?", opts: ["Qo'shtirnoqlar", "Qavslar"], ans: 0},
+                {q: "3. '25' nimani bildiradi?", opts: ["Matnni", "Sonni"], ans: 0},
+                {q: "4. Bittalik va ikkitalik qo'shtirnoqni aralashtirish mumkinmi?", opts: ["Yo'q, qanday ochilsa shunday yopiladi", "Ha, farqi yo'q"], ans: 0},
+                {q: "5. Komment (izoh) qanday belgi bilan yoziladi?", opts: ["# (Panjara)", "//"], ans: 0}
+            ],
+            // 3-blok: SyntaxError
+            [
+                {q: "1. SyntaxError nima?", opts: ["Dasturlash tili qoidasi buzilishi", "Internet yo'qligi"], ans: 0},
+                {q: "2. print(\"Salom) dagi xato nima?", opts: ["Qo'shtirnoq yopilmagan", "Qavs yopilmagan"], ans: 0},
+                {q: "3. Xato chiqqanda dastur ishlashda davom etadimi?", opts: ["Yo'q, to'xtaydi", "Ha, o'tkazib yuboradi"], ans: 0},
+                {q: "4. print(Salom) dagi xato?", opts: ["Qo'shtirnoq yo'q", "Qavs yo'q"], ans: 0},
+                {q: "5. Kodni o'qib bo'lmaydigan qilib yozish qanday xato?", opts: ["SyntaxError", "LogicError"], ans: 0}
+            ],
+            // 4-blok: REPL
+            [
+                {q: "1. REPL ni ishga tushirish uchun nima deyiladi?", opts: ["python", "run"], ans: 0},
+                {q: "2. REPL dan qanday chiqib ketiladi?", opts: ["exit()", "close()"], ans: 0},
+                {q: "3. >>> belgisi nimani anglatadi?", opts: ["Kutish holatini", "Xatoni"], ans: 0},
+                {q: "4. Interaktiv muhit nimaga kerak?", opts: ["Tezkor kodni tekshirishga", "O'yin yaratishga"], ans: 0},
+                {q: "5. Pyodide nima?", opts: ["Brauzerdagi Python muhiti", "Ma'lumotlar bazasi"], ans: 0}
+            ]
+        ];
+
+        // Yangi qo'shilgan 42-dars kodi bloklari (Prompt namunalari) uchun mini-testlar
+        const miniTests_42 = [
+            // 1-blok: Ideal Prompt Shabloni
+            [
+                {q: "1. AI ga kod yozdirayotganda qaysi formulani qat'iy yozish kerak?", opts: ["C.R.E.A.T.E (Rol, Vazifa, Cheklov, Format)", "Shunchaki buyruq berish"], ans: 0},
+                {q: "2. Cheklovlar nima uchun kerak?", opts: ["AI eski yoki noto'g'ri kutubxona ishlatmasligi uchun", "Kodni ko'paytirish uchun"], ans: 0},
+                {q: "3. Format talabi qanday bo'lishi mumkin?", opts: ["Class ko'rinishida yoz", "Tez yoz"], ans: 0},
+                {q: "4. 'Sen Senior Backend Dasturchisan' deb yozish Promptning qaysi bosqichi?", opts: ["Rol berish", "Misol keltirish"], ans: 0},
+                {q: "5. Nima uchun 'Faqat izoh qoldirib yoz' sharti muhim?", opts: ["Kodni keyinroq tushunib olish uchun", "Ranglarni to'g'irlash uchun"], ans: 0}
+            ],
+            // 2-blok: Debugging
+            [
+                {q: "1. Kod ishlamaganda AI ga birinchi navbatda nima tashlanadi?", opts: ["Terminaldagi qizil xatolik (Traceback)", "Butun boshli kod fayli"], ans: 0},
+                {q: "2. Xatoni topish (Debugging) bosqichida qanday qat'iy talab qo'yilishi kerak?", opts: ["Faqat xato bor joyni o'zini o'zgartirib tushuntir", "Barcha kodlarni yangidan yoz"], ans: 0},
+                {q: "3. Agar AI ketma-ket xato qilaversa nima qilish kerak?", opts: ["Unga hozir ishlayotgan qismni yangi kontekst qilib qayta yozish kerak", "Dasturni o'chirib yuborish kerak"], ans: 0},
+                {q: "4. Nima uchun butun kodni nusxalatish yaxshi emas?", opts: ["Kontekst xotirasi to'lib xatolar ko'payadi", "Buning farqi yo'q"], ans: 0},
+                {q: "5. 'Iterative Debugging' nima?", opts: ["Xatoni qadamba-qadam, qisman tuzatib borish", "Tezlik bilan o'chirish"], ans: 0}
+            ]
+        ];
+
+        const finalQuestionBank = [
+            { q: "Ekranga matn chiqarish uchun qaysi funksiya ishlatiladi?", opts: ["print()", "echo()", "console.log()"], ans: 0 },
+            { q: "\"Hello World\" to'g'ri yozilganini toping.", opts: ["print(\"Hello World\")", "print Hello World", "print('Hello World\")"], ans: 0 },
+            { q: "print() ichida raqam chiqarish mumkinmi?", opts: ["Ha, qo'shtirnoqsiz ham mumkin", "Yo'q, faqat matn", "Faqat o'zgaruvchi/matn"], ans: 0 },
+            { q: "Qaysi belgi kodni izoh (comment) ga aylantiradi?", opts: ["#", "//", "<!--"], ans: 0 },
+            { q: "REPL (Interaktiv muhit) nima?", opts: ["Terminalda kodni yozib srazu javobini ko'rish", "Sayt yasash usuli", "Xatolik turi"], ans: 0 },
+            { q: "Matn (String) qaysi belgilar ichida bo'lishi shart?", opts: ["' ' yoki \" \"", "< >", "[ ]"], ans: 0 },
+            { q: "O'zbek tilidagi tutuq belgisi qatnashganda qaysi qo'shtirnoqdan foydalangan ma'qul?", opts: ["Ikkitalik (\" \")", "Bittalik (' ')", "Farqi yo'q"], ans: 0 },
+            { q: "print('Salom') va print(\"Salom\") farqi bormi?", opts: ["Hech qanday farqi yo'q", "Biri xato", "Bittalik ishlamaydi"], ans: 0 },
+            { q: "Agar raqam qo'shtirnoq ichiga olinsa (\"25\"), Python uni nima deb o'qiydi?", opts: ["Matn (String)", "Son (Int)", "Xato"], ans: 0 },
+            { q: "Matnlarni qo'shish qanday belgilanadi?", opts: ["+ orqali", "- orqali", "qo'shib bo'lmaydi"], ans: 0 },
+            { q: "SyntaxError nimani anglatadi?", opts: ["Kodning yozilish qoidasi buzilganini", "Internet yo'qligini", "Kompyuter xatosini"], ans: 0 },
+            { q: "print(\"Salom) kodidagi xatoni belgilang.", opts: ["Oxirida qo'shtirnoq yopilmagan", "print hato yozilgan", "qavs yo'q"], ans: 0 },
+            { q: "print(Salom) kodida nima qolib ketgan?", opts: ["Qo'shtirnoq", "Qavslar", "Nuqta"], ans: 0 },
+            { q: "Python kodni qanday tartibda o'qiydi?", opts: ["Yuqoridan pastga", "Pastdan yuqoriga", "Tasodifiy"], ans: 0 },
+            { q: "IndentationError qanday xato?", opts: ["Bo'sh joy (xatboshi) tashlashdagi xato", "Ism xatosi", "Matematik xato"], ans: 0 },
+            { q: "Terminal (Pyodide) da kodni yurgizish natijasi qayerda chiqadi?", opts: ["Terminal oyiynasida", "Yangi saytda", "Telefonda"], ans: 0 },
+            { q: "Terminal muhitini yopish komandasi qaysi?", opts: ["exit()", "close", "stop()"], ans: 0 },
+            { q: "IDE nima degani?", opts: ["Kodni qulay yozish muhiti", "Internet tezligi", "Pythonning eski versiyasi"], ans: 0 },
+            { q: ">>> belgisi nimani bildiradi?", opts: ["Python yangi buyruq kutayotganini", "Dastur buzilganini", "Fayl yopilganini"], ans: 0 },
+            { q: "Dasturlashni o'rganishdagi eng birinchi an'anaviy kod nima?", opts: ["Hello World!", "My first code", "Python start"], ans: 0 }
+        ];
+
+        let activeLesson = 0;
+        let pyodide = null;
+        let currentUser = "";
+        let completedLessons = [];
+        let unlockedLessons = [];
+
+        function checkAuth() {
+            const user = localStorage.getItem('username');
+            completedLessons = JSON.parse(localStorage.getItem('completedLessons') || '[]');
+            unlockedLessons = JSON.parse(localStorage.getItem('unlockedLessons') || '[0, 1, 2]');
+            if (!user) { document.getElementById('login-modal').classList.add('active'); } 
+            else { currentUser = user; updateHeader(); renderLessonsList(); }
+        }
+
+        function saveUser() {
+            const input = document.getElementById('username-input');
+            const name = input.value.trim();
+            if (name.length < 2) { alert("Iltimos, ismingizni kiriting!"); return; }
+            localStorage.setItem('username', name);
+            currentUser = name;
+            document.getElementById('login-modal').classList.remove('active');
+            updateHeader(); renderLessonsList();
+        }
+
+        function updateHeader() {
+            if(!currentUser) return;
+            document.getElementById('header-greeting').innerText = `Xush kelibsiz, ${currentUser}!`;
+            document.getElementById('header-avatar').innerText = currentUser.charAt(0).toUpperCase();
+            document.getElementById('profile-avatar').innerText = currentUser.charAt(0).toUpperCase();
+            document.getElementById('profile-name').innerText = currentUser;
+        }
+
+        function openProfile() {
+            const total = courseLessons.length;
+            const completed = completedLessons.length;
+            const percent = Math.round((completed / total) * 100);
+            document.getElementById('profile-stats').innerText = `${completed}/${total} (${percent}%)`;
+            document.getElementById('profile-progress').style.width = `${percent}%`;
+            document.getElementById('profile-modal').classList.add('active');
+        }
+
+        function closeProfile() { document.getElementById('profile-modal').classList.remove('active'); }
+
+        function renderLessonsList() {
+            const list = document.getElementById('lessons-list');
+            list.innerHTML = '';
+            courseLessons.forEach((lesson, index) => {
+                const isUnlocked = unlockedLessons.includes(index);
+                const isCompleted = completedLessons.includes(index);
+                const div = document.createElement('div');
+                div.className = `lesson-item ${index === activeLesson ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}`;
+                
+                if (isUnlocked) { div.onclick = () => loadLesson(index); } 
+                else { div.onclick = () => alert("Diqqat: Keyingi mavzuga o'tish uchun oxirgi darsning 20 talik testidan belgilangan talab (80%-100%) bilan o'tishingiz shart!"); }
+                
+                let icon = index === 0 ? "fa-home text-blue-400" : (index === 42 ? "fa-robot text-purple-400" : "fa-file-code");
+                let lockIcon = !isUnlocked ? '<i class="fas fa-lock text-gray-500 ml-auto"></i>' : (isCompleted ? '<i class="fas fa-check-circle text-green-500 ml-auto"></i>' : '');
+                div.innerHTML = `<i class="fas ${icon} w-5 text-center"></i> <span>${lesson}</span> ${lockIcon}`;
+                list.appendChild(div);
+            });
+        }
+
+        function unlockAndNext(index) {
+            if (!completedLessons.includes(index)) completedLessons.push(index);
+            if (!unlockedLessons.includes(index + 1) && (index + 1) < courseLessons.length) unlockedLessons.push(index + 1);
+            localStorage.setItem('completedLessons', JSON.stringify(completedLessons));
+            localStorage.setItem('unlockedLessons', JSON.stringify(unlockedLessons));
+            renderLessonsList();
+            loadLesson(index + 1);
+        }
+
+        function getRequiredPercent(fails) {
+            if(fails === 0) return 80;
+            if(fails === 1) return 85;
+            if(fails === 2) return 90;
+            if(fails === 3) return 95;
+            return 100;
+        }
+
+        function handleMiniTestChoice(btn, isCorrect) {
+            let optionsDiv = btn.parentElement;
+            let btns = optionsDiv.querySelectorAll('button');
+            btns.forEach(b => { b.disabled = true; b.style.opacity = '0.7'; });
+            if (isCorrect) {
+                btn.classList.add('correct');
+                btn.innerHTML += ' <i class="fas fa-check ml-2"></i>';
+            } else {
+                btn.classList.add('wrong');
+                btn.innerHTML += ' <i class="fas fa-times ml-2"></i>';
+            }
+        }
+
+        let currentFinalAns = [];
+
+        function renderFinalTest(index) {
+            const cont = document.getElementById('final-questions');
+            cont.innerHTML = '';
+            currentFinalAns = [];
+            
+            let bank = [];
+            if (index === 2) bank = [...finalQuestionBank];
+            else {
+                for(let i=0; i<20; i++){ bank.push({ q: `${index}-dars. ${i+1}-nazorat savoli.`, opts: ["To'g'ri variant", "Xato variant 1", "Xato variant 2"], ans: 0 }); }
+            }
+
+            let shuffled = bank.sort(() => 0.5 - Math.random());
+            
+            shuffled.forEach((q, i) => {
+                let opts = q.opts.map((opt, idx) => ({ text: opt, isCorrect: idx === q.ans }));
+                opts.sort(() => 0.5 - Math.random());
+                let newCorrectIndex = opts.findIndex(o => o.isCorrect);
+                currentFinalAns.push(newCorrectIndex);
+                
+                let optsHtml = opts.map((optObj, oi) => 
+                    `<label class="test-label block mt-2 text-sm p-3 rounded cursor-pointer border hover:border-blue-500 transition">
+                        <input type="radio" name="fq${i}" value="${oi}" class="mr-2"> ${optObj.text}
+                    </label>`
+                ).join('');
+                cont.innerHTML += `<div class="mb-6 bg-[var(--bg-dark)] p-4 rounded-lg"><p class="font-semibold mb-2">${i+1}. ${q.q}</p>${optsHtml}</div>`;
+            });
+            
+            let failCount = parseInt(localStorage.getItem(`failCount_${activeLesson}`) || "0");
+            let reqPercent = getRequiredPercent(failCount);
+            document.getElementById('test-instruction').innerHTML = `<i class="fas fa-exclamation-triangle"></i> Jazo shkalasi faol: Sizdan o'tish uchun kamida <b>${reqPercent}%</b> to'g'ri topish talab qilinadi.`;
+        }
+
+        function submitFinalTest(index) {
+            let total = 20;
+            let correct = 0;
+            for(let i=0; i<total; i++) {
+                let selected = document.querySelector(`input[name="fq${i}"]:checked`);
+                if(selected && parseInt(selected.value) === currentFinalAns[i]) { correct++; }
+            }
+            
+            let percent = Math.round((correct / total) * 100);
+            let failCount = parseInt(localStorage.getItem(`failCount_${activeLesson}`) || "0");
+            let requiredPercent = getRequiredPercent(failCount);
+            let resEl = document.getElementById('final-test-result');
+            resEl.classList.remove('hidden');
+            
+            if (percent >= requiredPercent) {
+                resEl.innerHTML = `<div class="p-4 bg-green-900/50 border border-green-500 text-green-400 rounded-lg"><i class="fas fa-check-circle text-xl mb-2"></i><br>Tabriklaymiz! Siz ${percent}% to'pladingiz (Talab: ${requiredPercent}%). 20 ta testdan muvaffaqiyatli o'tdingiz. ${index === 42 ? "Siz kursni to'liq yakunladingiz!" : "Keyingi dars qulfi yechildi!"}</div>`;
+                if(index !== 42) {
+                    document.getElementById('next-lesson-btn').classList.remove('hidden');
+                }
+                document.getElementById('submit-final-test').classList.add('hidden');
+            } else {
+                failCount++;
+                localStorage.setItem(`failCount_${activeLesson}`, failCount);
+                let nextReq = getRequiredPercent(failCount);
+                resEl.innerHTML = `<div class="p-4 bg-red-900/50 border border-red-500 text-red-400 rounded-lg"><i class="fas fa-times-circle text-xl mb-2"></i><br>Siz ${percent}% to'pladingiz. O'tish bali ${requiredPercent}% edi.<br><br><b>⚠️ QAT'IY JAZO:</b> Keyingi urunishda sizdan <b>${nextReq}%</b> to'g'ri topish talab qilinadi! Test 4 soniyadan so'ng yangi savollar bilan qayta yuklanadi.</div>`;
+                setTimeout(() => { renderFinalTest(index); resEl.classList.add('hidden'); window.scrollTo(0, document.body.scrollHeight); }, 4000);
+            }
+        }
+
+        function loadLesson(index) {
+            if(window.innerWidth <= 768 && document.querySelector('.sidebar').classList.contains('open')) { toggleSidebar(); }
+            activeLesson = index;
+            renderLessonsList();
+            
+            const board = document.getElementById('theory-board');
+            if (l[index]) {
+                board.innerHTML = `<div class="markdown-body">${marked.parse(l[index])}</div>`;
+                
+                if (index === 2) {
+                    const preBlocks = board.querySelectorAll('pre');
+                    preBlocks.forEach((pre, blockIdx) => {
+                        if (miniTests[blockIdx]) {
+                            let miniTestsHtml = `<div class="mt-4 mb-8">`;
+                            miniTests[blockIdx].forEach((mq) => {
+                                let optsHtml = mq.opts.map((opt, oidx) => `<button onclick="handleMiniTestChoice(this, ${oidx === mq.ans})">${opt}</button>`).join('');
+                                miniTestsHtml += `<div class="mini-test-card"><p><i class="fas fa-bolt text-yellow-500 mr-2"></i> ${mq.q}</p><div class="mini-test-options">${optsHtml}</div></div>`;
+                            });
+                            miniTestsHtml += `</div>`;
+                            pre.insertAdjacentHTML('afterend', miniTestsHtml);
+                        }
+                    });
+                }
+                
+                if (index === 42) {
+                    const preBlocks = board.querySelectorAll('pre');
+                    preBlocks.forEach((pre, blockIdx) => {
+                        if (miniTests_42[blockIdx]) {
+                            let miniTestsHtml = `<div class="mt-4 mb-8">`;
+                            miniTests_42[blockIdx].forEach((mq) => {
+                                let optsHtml = mq.opts.map((opt, oidx) => `<button onclick="handleMiniTestChoice(this, ${oidx === mq.ans})">${opt}</button>`).join('');
+                                miniTestsHtml += `<div class="mini-test-card"><p><i class="fas fa-bolt text-yellow-500 mr-2"></i> ${mq.q}</p><div class="mini-test-options">${optsHtml}</div></div>`;
+                            });
+                            miniTestsHtml += `</div>`;
+                            pre.insertAdjacentHTML('afterend', miniTestsHtml);
+                        }
+                    });
+                }
+
+                if (index >= 2) {
+                    let finalHtml = `
+                        <div class="final-test-panel mt-10 p-6 rounded-lg border-2 border-blue-500/30 shadow-lg">
+                            <h3 class="text-xl font-bold text-blue-500 mb-2"><i class="fas fa-shield-alt"></i> YAKUNIY NAZORAT (20 ta test)</h3>
+                            <p id="test-instruction" class="text-sm font-bold text-red-500 mb-6"></p>
+                            <div id="final-questions"></div>
+                            <button id="submit-final-test" class="mt-4 bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-6 rounded-lg transition w-full shadow-lg text-lg uppercase tracking-wide" onclick="submitFinalTest(${index})">Testni Yakunlash va Natijani Ko'rish</button>
+                            <div id="final-test-result" class="mt-6 text-center font-semibold hidden"></div>
+                            <button id="next-lesson-btn" class="mt-6 bg-green-600 hover:bg-green-500 text-white font-bold py-4 px-6 rounded-lg transition hidden w-full shadow-lg text-lg uppercase tracking-wide" onclick="unlockAndNext(${index})">Keyingi darsga o'tish <i class="fas fa-arrow-right"></i></button>
+                        </div>
+                    `;
+                    board.insertAdjacentHTML('beforeend', finalHtml);
+                    renderFinalTest(index);
+                } else {
+                    board.insertAdjacentHTML('beforeend', `<div class="mt-10 text-center"><button onclick="unlockAndNext(${index})" class="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg text-lg uppercase">Keyingi darsga o'tish <i class="fas fa-arrow-right"></i></button></div>`);
+                }
+            } else {
+                board.innerHTML = `<div class="flex flex-col justify-center items-center h-full text-gray-500"><i class="fas fa-hammer text-5xl mb-4 text-gray-600"></i><h2 class="text-xl font-bold mb-2">${courseLessons[index]}</h2><p>Ushbu mavzu ustida ishlanmoqda...</p></div>`;
+            }
+            document.getElementById('center-panel').scrollTop = 0;
+        }
+
+        function applyTheme(isLight) {
+            if (isLight) { document.body.classList.add('light-mode'); document.getElementById('theme-icon').classList.replace('fa-moon', 'fa-sun'); } 
+            else { document.body.classList.remove('light-mode'); document.getElementById('theme-icon').classList.replace('fa-sun', 'fa-moon'); }
+        }
+        function toggleTheme() {
+            const isLight = !document.body.classList.contains('light-mode');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            applyTheme(isLight);
+        }
+        function toggleSidebar() { document.querySelector('.sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('active'); }
+        function switchTab(tab) {
+            if (tab === 'theory') {
+                document.getElementById('center-panel').classList.add('active-tab'); document.getElementById('right-panel').classList.remove('active-tab');
+                document.getElementById('tab-theory').classList.add('active'); document.getElementById('tab-terminal').classList.remove('active');
+            } else {
+                document.getElementById('center-panel').classList.remove('active-tab'); document.getElementById('right-panel').classList.add('active-tab');
+                document.getElementById('tab-theory').classList.remove('active'); document.getElementById('tab-terminal').classList.add('active');
+            }
+        }
+
+        function initApp() {
+            marked.setOptions({ breaks: true, gfm: true });
+            applyTheme(localStorage.getItem('theme') === 'light');
+            let sc = localStorage.getItem('saved_draft_code');
+            if (sc) document.getElementById('code-editor').value = sc;
+            document.getElementById('code-editor').addEventListener('input', (e) => localStorage.setItem('saved_draft_code', e.target.value));
+            checkAuth();
+            if (courseLessons.length > 0) loadLesson(activeLesson);
+            initPyodide();
+        }
+
+        async function initPyodide() {
+            const term = document.getElementById('terminal-output');
+            try {
+                pyodide = await loadPyodide({
+                    stdout: (t) => { term.innerHTML += t + '\n'; term.scrollTop = term.scrollHeight; },
+                    stderr: (t) => { term.innerHTML += `<span style="color: #ef4444;">${t}</span>\n`; term.scrollTop = term.scrollHeight; }
+                });
+                term.innerHTML = "Tizim tayyor. Python 3 kodini yozib ishga tushiring.\n>_ \n";
+            } catch (err) { term.innerHTML = `<span style="color: #ef4444;">Tizim yuklash xatosi: ${err}</span>`; }
+        }
+
+        async function runPython() {
+            if (!pyodide) { alert("Python muhiti yuklanmoqda, kuting..."); return; }
+            const code = document.getElementById('code-editor').value;
+            const term = document.getElementById('terminal-output');
+            term.innerHTML += `<span style="color:#8b949e;">>>> Bajarilmoqda...</span>\n`;
+            document.getElementById('run-btn').innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+            document.getElementById('run-btn').disabled = true;
+            try { await pyodide.runPythonAsync(code); } 
+            catch (err) { term.innerHTML += `<span style="color: #ff7b72;">${err}</span>\n`; } 
+            finally { document.getElementById('run-btn').innerHTML = `<i class="fas fa-play"></i> Run Code`; document.getElementById('run-btn').disabled = false; term.scrollTop = term.scrollHeight; }
+        }
+
+        function clearTerminal() { document.getElementById('terminal-output').innerHTML = ">_ \n"; }
+        function toggleChat() { document.getElementById('chat-modal').classList.toggle('active'); }
+        function sendMessage() {
+            const el = document.getElementById('chat-input');
+            if(!el.value.trim()) return;
+            let msg = el.value; el.value = '';
+            const box = document.getElementById('chat-messages');
+            box.innerHTML += `<div class="msg user">${msg}</div>`;
+            document.getElementById('chat-loader').classList.add('active');
+            box.scrollTop = box.scrollHeight;
+            setTimeout(() => {
+                document.getElementById('chat-loader').classList.remove('active');
+                box.innerHTML += `<div class="msg bot">Ajoyib savol! Hozircha Robo-Ustoz tarmog'i ulanmaganligi sababli, darsdagi ma'lumotlarni o'qib mustaqil o'rganishda davom eting.</div>`;
+                box.scrollTop = box.scrollHeight;
+            }, 800);
+        }
+
+        document.getElementById('code-editor').addEventListener('keydown', function(e) {
+            if (e.key == 'Tab') { e.preventDefault(); let s = this.selectionStart; let en = this.selectionEnd; this.value = this.value.substring(0, s) + "    " + this.value.substring(en); this.selectionStart = this.selectionEnd = s + 4; }
+        });
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
